@@ -12,4 +12,4 @@ A random collection of stuff that may or may not be useful to consider.
 - Auto-completion to help resolve URIs from already-ingested packages?
 - If using name shortcuts, could have local-only aliasing to resolve conflicts
 - HTTP redirects for package URIs possible
-- How to denylist known bad packages? A use for an index? Meaning deny-list-only one
+- How to deny-list known bad packages? A use for an index? Meaning deny-list-only one

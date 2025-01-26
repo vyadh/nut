@@ -37,6 +37,14 @@ Nut is currently a concept and not a package manager per-se. This statement will
 - **Reliable**: Comprehensive testing and relevant documentation.
 
 
-### Nutopian Philosophy
+## Nutopian Philosophy
 
 Some background reading can be found in [The Philosophy of Nut](PHILOSOPHY.md).
+
+
+## Design
+
+Design documentation for the various aspects of our Nutty universe can be found below.
+
+- [Versionless Packaging](design/versionless-packaging.md)
+- [Zero Code](design/zero-code.md)

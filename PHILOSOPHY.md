@@ -19,6 +19,7 @@ Registries and open source projects are being bombarded by various forms of atta
 - **Dependency chain attacks**: Rather than attempting to attack a mature package with a strong open source community around it, it is often far easier to attack one of its less well maintained dependencies.
 - **Package hijacking**: Compromising developer accounts and uploading malicious versions of their packages.
 - **Weakness injection attacks**: Posing as a legitimate open source contributor and intentionally injecting vulnerabilities into a package in the guise of useful new functionality.
+- **Package Manager Attacks**: Functionality that allows arbitrary code to run as part of dependency resolution and build opens an unnecessary attack vector that would run prior to any code-based security scanning.
 
 The presence of a package index doesn't solve any of these issues and in fact often creates the problem. Worse, with the advent of Gen AI and being able to create sophisticated attacks at scale, the problem is only going to get worse.
 
@@ -69,30 +70,3 @@ This is what a package index is uniquely suited to solve and at scale. It's also
 ## Scale
 
 While Nushell is popular, there is unlikely the dedicated resourcing required to vet new packages and/or remove malicious ones with a reliable community-provided SLA. Operating a package index is likely to be an interesting challenge, but a lot of the time it doesn't sound fun. Instead, the focus should be on using technology to reduce the need for an index, and to put the visibility and power in the hands of the package consumer. 
-
-
-## Zero Code
-
-There are package management and build systems that allow untrusted code execution as part of the resolution process and package installation. This is widely regarded as a security risk. It is worse than doing `curl <untrusted url> | bash` because the package being installed could be several levels down in the dependency hierarchy and the user has very little visibility of what is happening.
-
-The other consideration is that installing and building software is done within a different security context to code running in applications. The CI/CD chain may have access to sensitive credentials for one. Another is that arbitrary code execution in the resolution process provides no opportunity to leverage code scanning tools before code is run aside from generic, and therefore limited, scanning 
-tools that sit around a corporate proxy.
-
-
-## Versionless Packaging
-
-*Say what you need, not what you are.*
-
-🛈️ This section is opinionated.
-
-Specifying a version within a project file to denote the version of a package is widely supported by popular package managers. However, for anything beyond very simple packages, this is a largely redundant and potentially confusing mechanism.
-
-It is redundant because the version would not only need to be defined in the codebase. It would need to be understood within the CI system and the repository would generally tag the codebase with a version number anyway, and now there are two version numbers that are not necessarily the same.
-
-It's redundant because, while versioning is a human-directed way to visualise at a glance the level of change, it is purely a function of the commits since the last version released from that branch. The increasing popularity of a [Conventional Commits](https://www.conventionalcommits.org) style of commit messages allows the version number determination to be entirely automated, and be much more reliably reflected given how easy it is to forget what was changed between a commit and it's eventual release.
-
-It's confusing because it opens the door to adding semver pre-release information, such as 1.0.0-beta. It might be clear to the author that more changes are required, but fundamentally, the maturity of a codebase is not determined by the codebase itself, or a particular commit id. It's determined by where it is within a software development lifecycle. All releases are release candidates. A team may have finished testing and ready for release to UAT or production. If the version number needs to be updated in the code, a production deployment cannot be done until the code has been updated purely for the version number, requiring a new commit id, and invalidating all steps up to that point, perhaps requiring redundant deployments a much more confusing audit trail.
-
-In a monorepo, this file-based approach seems convenient but the maintenance of many version numbers requires another level of maintenance that is largely unnecessary.
-
-In the spirit of encouraging the right thing rather than the wrong thing, we'll start assuming there is no version number within the codebase. Instead, the version of a release will be determined by the tags - which may be populated manually as a low-maintenance approach, or be determined by the CI system that understands the context of a release, perhaps computed from the commit messages.
