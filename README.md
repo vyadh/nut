@@ -4,7 +4,7 @@ A design space for a modern and distributed package manager for Nushell.
 
 > Nupm + Nuun + Git + Dodgy Name - Package Index = Nut
 
-*Growing a package management infrastructure from something small and maintainable all the way to a large scale industrial Nutopia.*
+*Growing package management infrastructure from something small and maintainable all the way to a large scale industrial Nutopia.*
 
 
 ## What is Nut?
@@ -39,4 +39,4 @@ Nut is currently a concept and not a package manager per-se. This statement will
 
 ### Nutopian Philosophy
 
-Some background reading into the philosophy of Nut can be found in [The Philosophy of Nut](PHILOSOPHY.md).
+Some background reading can be found in [The Philosophy of Nut](PHILOSOPHY.md).
