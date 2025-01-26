@@ -36,7 +36,7 @@ What about if you could:
 
 The key would be to adopt modern practices that provide authentictity and make the various factors that would affect trust visible. In concrete terms, this would mean integrating technologies and specifications like:
 
-- Authenticity: Sigstore's [Cosign](https://github.com/sigstore/cosign)
+- Authenticity: [Sigstore Cosign](https://github.com/sigstore/cosign)
 - Project Health: [OpenSSF Scorecard](https://openssf.org/projects/scorecard)
 - SPDX License Checks: [SPDX](https://spdx.dev)
 - Security Specification: [Supply Chain Levels for Software Artifacts (SLSA)](https://slsa.dev)
@@ -44,6 +44,19 @@ The key would be to adopt modern practices that provide authentictity and make t
 Let's just Nut the obvious and say that none of this requires a package registry.
 
 What is clear is that it needs to be trivial to perform by a package author and somewhat conflictingly with stated goals, protect personal information.
+
+
+## Industry Standards
+
+Where possible we should lean to or encourage proven practices and standards, including:
+
+- [Conventional Commits](https://www.conventionalcommits.org)
+- [Semantic Versioning](https://semver.org)
+
+
+## Supporting Documentation
+
+- [Our Software Dependency Problem](https://research.swtch.com/deps)
 
 
 ## Distributed Model
@@ -70,3 +83,8 @@ This is what a package index is uniquely suited to solve and at scale. It's also
 ## Scale
 
 While Nushell is popular, there is unlikely the dedicated resourcing required to vet new packages and/or remove malicious ones with a reliable community-provided SLA. Operating a package index is likely to be an interesting challenge, but a lot of the time it doesn't sound fun. Instead, the focus should be on using technology to reduce the need for an index, and to put the visibility and power in the hands of the package consumer. 
+
+
+## Minimal Attack Surface
+
+There are largely two different types of dependencies, those that are required or helpful as part of developing the project itself, and those that are required for a downstream project to use it. We should not inflict our development-level choices downstream or imply they should be distributed unnecessarily.

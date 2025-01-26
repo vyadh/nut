@@ -44,7 +44,8 @@ Some background reading can be found in [The Philosophy of Nut](PHILOSOPHY.md).
 
 ## Design
 
-Design documentation for the various aspects of our Nutty universe can be found below.
+Documentation for the various aspects of our Nutty universe can be found below.
 
 - [Versionless Packaging](design/versionless-packaging.md)
 - [Zero Code](design/zero-code.md)
+- [Project Metadata](design/project-metadata.md)
