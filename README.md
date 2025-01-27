@@ -12,11 +12,11 @@ A design space for a modern and distributed package manager for Nushell.
 A package manager *design* that combines the ideas of Nupm and Nuun, many of the design aspirations of Nupm, using the distributed nature of Git as its foundations, with a mind to Secure Supply Chain Security and avoiding the pitfalls of centralised package ~~indicies~~ ~~indexes~~ registries.
 
 Nut is currently a concept and not a package manager per-se. This statement will be updated when it becomes clearer whether it is:
-- A exploratory implementation for Nupm
-- A foundational library that Nupm can leverage
-- A standalone project
+- An exploratory implementation for Nupm (most likely)
 - A design for a set of practices needed for a modern package management system
-- A nutty set of ideas that go nowhere (hopefully not, but quite possible)
+- A foundational library that Nupm can leverage (but let's not dance with chickens and eggs)
+- A standalone project (but nobody asked for a competing and unofficial package manager)
+- A nutty set of ideas that go nowhere (hopefully not, but also quite possible)
 
 
 ## Prior Art
