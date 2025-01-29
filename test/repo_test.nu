@@ -1,4 +1,5 @@
-use std/assert
+use std assert
+use std null-device
 use ../nut/repo.nu
 
 # [ignore]
@@ -37,7 +38,7 @@ def remove []: nothing -> nothing {
 }
 
 # [test]
-def "cache creates bare repo directly into target folder" [] {
+def "cache clones bare repo into target folder" [] {
     let remote = $in.remote
     let local = $in.local
     $remote | create-remote
@@ -60,20 +61,45 @@ def "cache makes takes no updates automatically" [] {
     cd $remote
     git tag "v2.0.0"
 
-    # The cache is not updated on clone
+    # The cache is not updated on cache
     $local | repo cache $remote
     cd $local
     let tags = git tag | complete | get stdout | str trim
     assert equal ($tags) "v1.0.0"
 }
 
+# [test]
+def "update fetches new content" [] {
+    let remote = $in.remote
+    let local = $in.local
+    $remote | create-remote
+
+    # First clone the remote
+    $local | repo cache $remote
+
+    # When a change is made to remote
+    cd $remote
+    commit-file "other.nu" "print other"
+    git tag "v2.0.0"
+
+    # The cache is updated
+    $local | repo update
+    cd $local
+    let tags = git tag | complete | get stdout | str trim
+    assert equal ($tags) "v1.0.0\nv2.0.0"
+}
+
 def create-remote []: string -> nothing {
     let remote = $in
     mkdir $remote
     cd $remote
-    git init --initial-branch=main
-    "print test" | save "main.nu"
-    git add "main.nu"
-    git commit --message "Initial commit"
+    git init --quiet --initial-branch=main
+    commit-file "main.nu" "print main"
     git tag "v1.0.0"
+}
+
+def commit-file [path: string, content: string] {
+    $"print ($content)" | save $path
+    git add $path
+    git commit --quiet --message $"Add ($path)"
 }

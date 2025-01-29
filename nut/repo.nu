@@ -5,3 +5,9 @@ export def cache [remote: string]: string -> nothing {
         git clone --bare $remote $path
     }
 }
+
+export def update []: string -> nothing {
+    let path = $in
+    cd $path
+    git fetch --tags
+}
