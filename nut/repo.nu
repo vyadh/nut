@@ -28,6 +28,23 @@ export def tags []: string -> list<record<created: datetime, name: string>> {
         }
 }
 
+export def "work create" [repo: string, ref: string]: string -> nothing {
+    let path = $in
+    cd $repo
+
+    exec { git worktree add --detach $path $ref }; ignore
+}
+
+export def "work list" []: string -> table<path: string, revision: string> {
+    let path = $in
+    cd $path
+
+    exec { git worktree list --porcelain }
+        | split row "\n\n"
+        | each { parse "worktree {path}\nHEAD {revision}\ndetached" }
+        | flatten
+}
+
 def exec [cmd: closure]: nothing -> string {
     let result = do $cmd | complete
 

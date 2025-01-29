@@ -2,22 +2,16 @@ use std assert
 use std null-device
 use ../nut/repo.nu
 
-# [ignore]
-def test []: nothing -> nothing {
-    git worktree add --detach "work-71bc3d2" "71bc3d2b5fc3804ee70bfff2804c21ac4e9cf2a5"
-    git worktree list --porcelain
-}
-
 # [before-each]
 def init []: nothing -> record {
     let dir = mktemp --directory
     let remote = $dir | path join "remote"
-    let local = $dir | path join "local"
+    let clone = $dir | path join "clone"
 
     {
         dir: $dir
         remote: $remote
-        local: $local
+        clone: $clone
     }
 }
 
@@ -29,10 +23,10 @@ def remove []: nothing -> nothing {
 # [test]
 def "cache fails with error with message from git" [] {
     let remote = $in.remote
-    let local = $in.local
+    let clone = $in.clone
 
     try {
-        $local | repo cache $remote
+        $clone | repo cache $remote
         assert false "should throw error"
     } catch { |error|
         assert equal ($error | get msg) $"fatal: repository '($remote)' does not exist"
@@ -40,43 +34,43 @@ def "cache fails with error with message from git" [] {
 }
 
 # [test]
-def "cache clones bare repo into target folder" [] {
+def "cache clone remote repo in target folder as bare" [] {
     let remote = $in.remote
-    let local = $in.local
+    let clone = $in.clone
     $remote | create-repo
 
-    $local | repo cache $remote
+    $clone | repo cache $remote
 
-    assert ($local | path join "refs" | path exists) "local folder is git repo"
+    assert ($clone | path join "refs" | path exists) "clone folder is git repo"
 }
 
 # [test]
 def "cache makes takes no updates automatically" [] {
     let remote = $in.remote
-    let local = $in.local
+    let clone = $in.clone
     $remote | create-repo
     $remote | tag "v1.0.0"
 
     # First clone the remote
-    $local | repo cache $remote
+    $clone | repo cache $remote
 
     # When a change is made to remote
     $remote | tag "v2.0.0"
 
-    # The local repo is not updated on cache
-    $local | repo cache $remote
-    cd $local
+    # The clone repo is not updated on cache
+    $clone | repo cache $remote
+    cd $clone
     let tags = git tag | complete | get stdout | str trim
     assert equal ($tags) "v1.0.0"
 }
 
 # [test]
 def "update fails with error with message from git" [] {
-    let local = $in.local
-    mkdir $local
+    let clone = $in.clone
+    mkdir $clone
 
     try {
-        $local | repo update
+        $clone | repo update
         assert false "should throw error"
     } catch { |error|
         assert equal ($error | get msg) "fatal: not a git repository (or any of the parent directories): .git"
@@ -86,31 +80,31 @@ def "update fails with error with message from git" [] {
 # [test]
 def "update fetches new content" [] {
     let remote = $in.remote
-    let local = $in.local
+    let clone = $in.clone
     $remote | create-repo
     $remote | tag "v1.0.0"
 
     # Cache the remote
-    $local | repo cache $remote
+    $clone | repo cache $remote
 
     # When a change is made to remote
     $remote | commit-file "other.nu" "print other"
     $remote | tag "v2.0.0"
 
     # The cache is updated
-    $local | repo update
-    cd $local
+    $clone | repo update
+    cd $clone
     let tags = git tag | complete | get stdout | str trim
     assert equal ($tags) "v1.0.0\nv2.0.0"
 }
 
 # [test]
 def "tags fails with error with message from git" [] {
-    let local = $in.local
-    mkdir $local
+    let clone = $in.clone
+    mkdir $clone
 
     try {
-        $local | repo tags
+        $clone | repo tags
         assert false "should throw error"
     } catch { |error|
         assert equal ($error | get msg) "fatal: not a git repository (or any of the parent directories): .git"
@@ -120,14 +114,14 @@ def "tags fails with error with message from git" [] {
 # [test]
 def "tags lists all tags and only tags" [] {
     let remote = $in.remote
-    let local = $in.local
+    let clone = $in.clone
     $remote | create-repo
     $remote | tag "v1.0.0"
     $remote | commit-file "other.nu" "print other"
     $remote | tag "v2.0.0"
-    $local | repo cache $remote
+    $clone | repo cache $remote
 
-    let tags = $local | repo tags
+    let tags = $clone | repo tags
 
     assert equal ($tags | reject created) [
         { name: "v1.0.0" }
@@ -137,6 +131,53 @@ def "tags lists all tags and only tags" [] {
         let recently = (date now) - 10sec
         assert ($tag.created > $recently)
     }
+}
+
+# [test]
+def "work create exports worktrees to target path" [] {
+    let dir = $in.dir
+    let remote = $in.remote
+    let clone = $in.clone
+    $remote | create-repo
+    $remote | commit-file "one.nu" "print one"
+    $remote | tag "v1.0.0"
+    $remote | commit-file "two.nu" "print two"
+    $remote | tag "v2.0.0"
+    $clone | repo cache $remote
+
+    let work1 = $dir | path join "work1"
+    let work2 = $dir | path join "work2"
+    $work1 | repo work create $clone "refs/tags/v1.0.0"
+    $work2 | repo work create $clone "refs/tags/v2.0.0"
+
+    assert ($work1 | path join "one.nu" | path exists)
+    assert ($work2 | path join "one.nu" | path exists)
+    assert not ($work1 | path join "two.nu" | path exists) "work1 does not have two.nu"
+    assert ($work2 | path join "two.nu" | path exists)
+}
+
+# [test]
+def "work list shows existing worktrees" [] {
+    let dir = $in.dir
+    let remote = $in.remote
+    let clone = $in.clone
+    $remote | create-repo
+    $remote | commit-file "one.nu" "print one"
+    $remote | tag "v1.0.0"
+    $remote | commit-file "two.nu" "print two"
+    $remote | tag "v2.0.0"
+    $clone | repo cache $remote
+    let work1 = $dir | path join "work1"
+    let work2 = $dir | path join "work2"
+    $work1 | repo work create $clone "refs/tags/v1.0.0"
+    $work2 | repo work create $clone "refs/tags/v2.0.0"
+
+    let worktrees = $clone | repo work list
+
+    assert equal $worktrees [
+        { path: $work1, revision: ($work1 | revision) }
+        { path: $work2, revision: ($work2 | revision) }
+    ]
 }
 
 def create-repo []: string -> nothing {
@@ -162,4 +203,11 @@ def commit-file [file: string, content: string]: string -> nothing {
     $"print ($content)" | save $file
     git add $file
     git commit --quiet --message $"Add ($file)"
+}
+
+def revision []: string -> string {
+    let path = $in
+    cd $path
+
+    git rev-parse HEAD | complete | get stdout | str trim
 }
