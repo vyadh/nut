@@ -5,7 +5,6 @@ use ../nut/repo.nu
 # [ignore]
 def test []: nothing -> nothing {
     git worktree add --detach "work-71bc3d2" "71bc3d2b5fc3804ee70bfff2804c21ac4e9cf2a5"
-
     git worktree list --porcelain
 }
 
@@ -25,6 +24,19 @@ def init []: nothing -> record {
 # [after-each]
 def remove []: nothing -> nothing {
     rm --recursive --force $in.dir
+}
+
+# [test]
+def "cache fails with error with message from git" [] {
+    let remote = $in.remote
+    let local = $in.local
+
+    try {
+        $local | repo cache $remote
+        assert false "should throw error"
+    } catch { |error|
+        assert equal ($error | get msg) $"fatal: repository '($remote)' does not exist"
+    }
 }
 
 # [test]
@@ -56,6 +68,19 @@ def "cache makes takes no updates automatically" [] {
     cd $local
     let tags = git tag | complete | get stdout | str trim
     assert equal ($tags) "v1.0.0"
+}
+
+# [test]
+def "update fails with error with message from git" [] {
+    let local = $in.local
+    mkdir $local
+
+    try {
+        $local | repo update
+        assert false "should throw error"
+    } catch { |error|
+        assert equal ($error | get msg) "fatal: not a git repository (or any of the parent directories): .git"
+    }
 }
 
 # [test]
