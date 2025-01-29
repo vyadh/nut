@@ -11,20 +11,16 @@ const pattern = '^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9
 
 export def sorted []: list<string> -> list<string> {
     $in
-        | sort-by --custom { |a, b|
-            let ar = $a | resolve
-            let br = $b | resolve
-
-            if ($ar | is-empty) and ($br | is-empty) {
-                0
-            } else if ($ar | is-empty) {
-                (-1)
-            } else if ($br | is-empty) {
-                1
-            } else {
-                (compare ($ar | first) ($br | first)) < 0
-            }
+        | each { |version|
+            $version
+                | resolve
+                | each { |row| { original: $version, resolved: $row } }
         }
+        | flatten
+        | sort-by --custom { |a, b|
+            (compare ($a | get resolved) ($b | get resolved)) < 0
+        }
+        | each { |row| $row.original }
 }
 
 # Returns a one-element table of the components if the version matches the spec.

@@ -84,6 +84,24 @@ def "compare pre-release by spec rule" [] {
 }
 
 # [test]
+def "sorted filters out non-versions" [] {
+    let versions = [
+        "a"
+        "0.2.0"
+        "b"
+        "0.1.0"
+        "c"
+        "0.3.0"
+    ]
+
+    assert equal ($versions | sorted) [
+        "0.1.0"
+        "0.2.0"
+        "0.3.0"
+    ]
+}
+
+# [test]
 def "sorted takes into account degree of difference" [] {
     let versions = [
         "0.1.50"
