@@ -9,6 +9,30 @@ A design space for a modern and distributed package manager for Nushell.
 
 ## What is Nut?
 
+Firstly, **Nut does not exist**. However, let's not that awkward fact of the 'now' get in the way of a good tagline.
+
+> *Want to use a script somebody pushed to a code repository and you want to use it from your code reliably? Just add a reference to it.*
+
+That's Nut(s).
+
+> *Want your enterprise to adopt Nushell but needs to proxy and cache access to packages with the ability to understand and control what they are consuming at scale?*
+
+That's Nut(s). Nushell going 1.0 might also help 😉.
+
+Nut is a distributed package management concept that was born out of the observation that:
+
+- A package index is not required. 
+- Explicit support for a package manager by the code author is not required.
+- Industry standards and available infrastructure already provide everything a package manager needs (Git, and optionally an OCI registry).
+
+With design considerations that go much further:
+- There is a scale of needs from somebody's coding itch to enterprise supported software. Both are valuable to their respective audience. The key is knowing what you're consuming.
+- Trust in your open source supply chain is helped more by visibility, digital signatures and definable standards than it is by a package index.
+- Today's popular project is tomorrow's bit rot. Metadata for project health has a time axis.
+
+
+## So what is Nut really?
+
 A package manager *design* that combines the ideas of Nupm and Nuun, many of the design aspirations of Nupm, using the distributed nature of Git as its foundations, with a mind to Secure Supply Chain Security and avoiding the pitfalls of centralised package ~~indicies~~ ~~indexes~~ registries.
 
 Nut is currently a concept and not a package manager per-se. This statement will be updated when it becomes clearer whether it is:
