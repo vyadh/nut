@@ -9,14 +9,34 @@
 # TODO add optional 'v' prefix here?
 const pattern = '^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
 
+export def valid []: list<string> -> list<string> {
+    $in | where { |version|
+        not ($version | resolve | is-empty)
+    }
+}
+
 export def sorted []: list<string> -> list<string> {
-    $in
+    let resolved = $in
         | each { |version|
-            $version
-                | resolve
-                | each { |row| { original: $version, resolved: $row } }
+            let resolved = $version | resolve
+            { original: $version, resolved: $resolved }
         }
-        | flatten
+
+    # Test specifically as error does not bubble up within an `each`
+    let invalids = $resolved
+        | where { $in.resolved | is-empty }
+        | each { $in.original }
+    if not ($invalids | is-empty) {
+        error make { msg: $"Invalid semver versions: ($invalids | str join ', ')" }
+    }
+
+    $resolved
+        | each { |attempt|
+            {
+                original: $attempt.original
+                resolved: ($attempt | get resolved | first)
+            }
+        }
         | sort-by --custom { |a, b|
             (compare ($a | get resolved) ($b | get resolved)) < 0
         }

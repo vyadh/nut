@@ -26,6 +26,31 @@ def "resolve versions that match the spec" [] {
 }
 
 # [test]
+def "valid matches only conforming semver versions" [] {
+    let versions = [
+        "0.2.0"
+        "1"
+        "1.0"
+        "1.0.a"
+        "0.1.0"
+        "01.0.0"
+        "1.0.0+a+b"
+        "1.0.0-snapshot+a+b"
+        "1.0.0.0"
+        "1.0.0-"
+        "1.0.0+"
+        "1.0.0-+"
+        "0.3.0"
+    ]
+
+    assert equal ($versions | valid) [
+        "0.2.0"
+        "0.1.0"
+        "0.3.0"
+    ]
+}
+
+# [test]
 def "compare when equal" [] {
     assert equal (parse-compare "1.2.3" "1.2.3") 0
 }
@@ -84,21 +109,20 @@ def "compare pre-release by spec rule" [] {
 }
 
 # [test]
-def "sorted filters out non-versions" [] {
+def "sorted error when non-versions exist" [] {
     let versions = [
-        "a"
-        "0.2.0"
-        "b"
         "0.1.0"
-        "c"
+        "a.b.c"
         "0.3.0"
+        "1.2.00"
     ]
 
-    assert equal ($versions | sorted) [
-        "0.1.0"
-        "0.2.0"
-        "0.3.0"
-    ]
+    try {
+        $versions | sorted
+        assert false "should throw error"
+    } catch { |error|
+        assert equal ($error | get msg) "Invalid semver versions: a.b.c, 1.2.00"
+    }
 }
 
 # [test]
