@@ -1,59 +1,41 @@
 
-# URNs
-# - git:github.com:vyadh/nut
-# - git:github.com:vyadh/nut:semver
-# - git:~user/dev:path/to/package
+# Ids:
+# - github.com/vyadh/nut
+# - github.com/vyadh/nut#semver
+# - /~user/dev/path/to/package
 
-# URLs:
+# Git URLs:
 # - https://github.com/vyadh/nut.git
 
 # Paths:
 # - /home/user/path/to/package
 # - file:///path/to/repo/
 
-export def "to string" []: record<scheme: string, domain: string, path: string, fragment: string> -> string {
+
+# Resolve the name to a canonical package id. This includes removing the scheme part of the URL,
+# removing `/git` suffixes and ensuring the path satisfies certain validation.
+export def "resolve" []: string -> string {
+    $in
+        | str replace --regex '^(https?://)?' ''
+        | str replace --regex '\.git$' ''
+        | str downcase
+
+}
+
+# Enforce the rules for a package name to catch accidental errors and prevent injection attacks.
+export def "validate" []: string -> string {
     let id = $in
-    if ($id.fragment | is-empty) {
-        $"($id.scheme):($id.domain):($id.path)"
+    let regex = '^([~/a-z0-9.-]+)(\/[^\s#]*)(#[^\s]*)?$'
+    if ($id like $regex) {
+        return $id
     } else {
-        $"($id.scheme):($id.domain):($id.path):($id.fragment)"
+        error make { msg: $"Invalid package id: ($id)" }
     }
 }
 
-export def "from string" []: string -> record<scheme: string, domain: string, path: string, fragment: string> {
-    { scheme: "git", domain: "github.com", path: "vyadh/nut", fragment: "semver" }
+# Parse the name and optional fragment
+export def "extract" []: string -> record<name: string, fragment: string> {
+    $in
+        | parse --regex '^(?P<name>[^#]+)(?:#(?P<fragment>.*))?$'
+        | first
 }
-
-# Convert our internal representation to a Git URL or path.
-export def "to git" []: record<scheme: string, domain: string, path: string, fragment: string> -> string {
-    # url or file
-    ""
-}
-
-# Convert a Git URL or path to our internal representation.
-export def "from git" []: string -> record<scheme: string, domain: string, path: string, fragment: string> {
-    {
-        scheme: "git",
-        domain: "",
-        path: ""
-        fragment: ""
-    }
-}
-
-# todo not sure we need below?
-
-#def "to url" []: record<scheme: string, domain: string, path: string, fragment: string> -> string {
-#    error make { msg: "Not implemented" }
-#}
-#
-#def "from url" []: string -> record<scheme: string, domain: string, path: string, fragment: string> {
-#    error make { msg: "Not implemented" }
-#}
-#
-#def "to path" []: record<scheme: string, domain: string, path: string, fragment: string> -> string {
-#    error make { msg: "Not implemented" }
-#}
-#
-#def "from path" []: string -> record<scheme: string, domain: string, path: string, fragment: string> {
-#    error make { msg: "Not implemented" }
-#}
