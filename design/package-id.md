@@ -18,12 +18,16 @@ If a repository is renamed or moved, at least within the same Git provider, an H
 
 For our purposes, we would want to encode the following information:
 - The scheme that should be used to retrieve the package.
-- The authority providing the package.
-- The path of the package within that authority.
-- The sub-path within the package that should be used, such as support for monorepos.
+- The domain providing the package.
+- The path of the package within that domain.
+- The context within the package that should be used.
 
 
 ## URIs
+
+The URI spec classifies what we have called domain here as an "authority". This is a bit of a misnomer as it's not necessarily an authority in the sense of any level of trust, but it is an approximate and convenient unique identifier for the package.
+
+A URI that implicitly prefixed by `nut://git/`.
 
 In order to provide a uniform way to reference packages, we will use [URIs (Uniform Resource Locator)](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier). This provides a familiar way to reference resources, and it is a standard that is widely used.
 
@@ -57,6 +61,8 @@ Translating that into a URI for our purposes, would look like:
 ```
 git://github.com/vyadh/nut
 ```
+
+Note this has nothing to do with Git's native and insecure transport!
 
 Using this format for packages makes it clear to the package manager the unique reference, which should be the same regardless of whether a user is using HTTP, HTTPS, SSH or accessing via a mirror or proxy.
 

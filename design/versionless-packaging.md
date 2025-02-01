@@ -27,3 +27,5 @@ A nutritious nut-laden approach is a Git-based one, where we can already record 
 In the spirit of encouraging the right thing rather than the wrong thing, we'll start assuming there is no version number within the codebase. Instead, the version of a release will be determined by the tags - which may be populated manually as a low-maintenance approach, or be determined by the CI system that understands the context of a release, perhaps computed from the commit messages.
 
 Of course, it may be that a particular commit has no tag associated with it. Without the presence of a tool that calculates the version from the commit messages, this is essentially a versionless release and should be reflected as such using the branch, timestamp and/or commit hash.
+
+If there are no tags for a package, we should provide an error rather than using HEAD. If HEAD is required, it can be specified explicitly.

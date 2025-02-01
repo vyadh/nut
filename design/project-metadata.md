@@ -4,7 +4,7 @@
 
 ```nushell
 {
-  id: "git://github.com/vyadh/nut"
+  id: "git:github.com:vyadh/nut"
   type: module
   description: "A dependency management Nutopia"
   license: "MIT"

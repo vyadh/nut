@@ -9,4 +9,3 @@ If we use base, do we need to use `git config core.bare false`?
 Each work tree maintains its own HEAD and checkout state.
 
 When running git fetch in the bare repo, worktrees won't automatically update their checked-out branches; we'll need to pull or merge manually.
-

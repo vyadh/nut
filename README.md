@@ -48,6 +48,8 @@ Nut is currently a concept and not a package manager per-se. This statement will
 - [Nupm](https://github.com/nushell/nupm): Nushell's existing experimental package manager and its forward-thinking [design document](https://github.com/nushell/nupm/blob/main/docs/design/README.md).
 - [Nupm Add/Update](https://github.com/nushell/nupm/issues/115): Some preliminary thoughts on how to add and update packages in Nupm.
 - [Nuun](https://github.com/kubouch/nuun): Experimental package activation experiment for Nupm.
+- [Nimble](https://nim-lang.github.io/nimble) the package manager for the Nim programming language.
+- [Go Mod](https://go.dev/ref/mod) the module system for the Go programming language.
 
 
 ## Conceptional Summary
