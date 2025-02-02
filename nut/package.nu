@@ -2,7 +2,7 @@
 # Resolve package information to a canonical form.
 export def resolve [
     type: string, version: string
-]: string -> record<scheme:string, host:string, path:string, fragment:string, type:string, version:string,> {
+]: string -> record<scheme: string, host: string, path: string, fragment: string, type: string, version: string> {
     let url = $in | url parse | validate
 
     $url
@@ -28,4 +28,13 @@ def validate []: record -> record {
         error make { msg: $"Port is unsupported" }
     }
     $url
+}
+
+# todo perhaps in a paths.nu?
+export def repo-path []: record<scheme: string, host: string, path: string, fragment: string> -> string {
+    let unsafe_chars = '[^a-zA-Z0-9_-]'
+    let escaped = $in.path | str replace --all --regex $unsafe_chars "_"
+    let slug = $"($in.scheme)/($in.path)"
+    let hash = $slug | hash md5 # MD5 is good enough for this
+    [ $escaped, $hash ] | str join "-"
 }

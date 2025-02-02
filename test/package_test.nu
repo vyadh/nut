@@ -58,6 +58,38 @@ def "parse with fragment" [] {
     assert equal $result "semver"
 }
 
+# [test]
+def "repo-path includes safe characters only" [] {
+    let pkg = {
+        scheme: "https"
+        host: "example.com"
+        path: "../some\\repo'\""
+        fragment: "component"
+        type: "something"
+        version: "v1.2.3"
+    }
+
+    let result = $pkg | package repo-path
+
+    assert ($result | str starts-with "___some_repo__")
+}
+
+# [test]
+def "repo-path includes hash of host and path" [] {
+    let pkg = {
+        scheme: "https"
+        host: "example.com"
+        path: "../some\\repo'\""
+        fragment: "component"
+        type: "something"
+        version: "v1.2.3"
+    }
+
+    let result = $pkg | package repo-path
+
+    assert ($result like "-67af6fce8a9af3e8593b3fb2ea4643f7$")
+}
+
 def catch-error [job: closure]: nothing -> string {
     try {
         do $job
