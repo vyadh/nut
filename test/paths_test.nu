@@ -1,4 +1,4 @@
-use ../nut/config_values.nu
+use ../nut/paths.nu
 use std assert
 
 # [before-each]
@@ -17,7 +17,7 @@ def remove []: nothing -> nothing {
 # [test]
 def "config-dir is overridable" [] {
     with-env { XDG_CONFIG_HOME: $in.temp } {
-        let dir = config_values config-dir
+        let dir = paths config-dir
 
         assert equal $dir (
             $in.temp | path join "nut"
@@ -28,7 +28,7 @@ def "config-dir is overridable" [] {
 # [test]
 def "data-dir is overridable" [] {
     with-env { XDG_DATA_HOME: $in.temp } {
-        let dir = config_values data-dir
+        let dir = paths data-dir
 
         assert equal $dir (
             $in.temp | path join "nut"
@@ -39,7 +39,7 @@ def "data-dir is overridable" [] {
 # [test]
 def "repo-dir is overridable" [] {
     with-env { XDG_DATA_HOME: $in.temp } {
-        let dir = config_values repos-dir
+        let dir = paths repos-dir
 
         assert equal $dir (
             $in.temp | path join "nut" | path join "repos"
