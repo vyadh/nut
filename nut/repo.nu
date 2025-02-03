@@ -1,5 +1,5 @@
 
-export def cache [remote: string]: string -> nothing {
+export def clone [remote: string]: string -> nothing {
     let path = $in
 
     if not ($path | path exists) {
@@ -7,6 +7,7 @@ export def cache [remote: string]: string -> nothing {
     }
 }
 
+# todo merge with cache or indicate whether cache already existed?
 export def update []: string -> nothing {
     let path = $in
     cd $path

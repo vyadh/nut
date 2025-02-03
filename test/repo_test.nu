@@ -21,12 +21,12 @@ def remove []: nothing -> nothing {
 }
 
 # [test]
-def "cache fails with error with message from git" [] {
+def "clone fails with error with message from git" [] {
     let remote = $in.remote
     let clone = $in.clone
 
     try {
-        $clone | repo cache $remote
+        $clone | repo clone $remote
         assert false "should throw error"
     } catch { |error|
         assert equal ($error | get msg) $"fatal: repository '($remote)' does not exist"
@@ -34,31 +34,31 @@ def "cache fails with error with message from git" [] {
 }
 
 # [test]
-def "cache clone remote repo in target folder as bare" [] {
+def "clone clone remote repo in target folder as bare" [] {
     let remote = $in.remote
     let clone = $in.clone
     $remote | create-repo
 
-    $clone | repo cache $remote
+    $clone | repo clone $remote
 
     assert ($clone | path join "refs" | path exists) "clone folder is git repo"
 }
 
 # [test]
-def "cache makes takes no updates automatically" [] {
+def "clone makes takes no updates automatically" [] {
     let remote = $in.remote
     let clone = $in.clone
     $remote | create-repo
     $remote | tag "v1.0.0"
 
     # First clone the remote
-    $clone | repo cache $remote
+    $clone | repo clone $remote
 
     # When a change is made to remote
     $remote | tag "v2.0.0"
 
-    # The clone repo is not updated on cache
-    $clone | repo cache $remote
+    # The repo is not updated given already cloned
+    $clone | repo clone $remote
     cd $clone
     let tags = git tag | complete | get stdout | str trim
     assert equal ($tags) "v1.0.0"
@@ -84,14 +84,14 @@ def "update fetches new content" [] {
     $remote | create-repo
     $remote | tag "v1.0.0"
 
-    # Cache the remote
-    $clone | repo cache $remote
+    # Clone the remote
+    $clone | repo clone $remote
 
     # When a change is made to remote
     $remote | commit-file "other.nu" "print other"
     $remote | tag "v2.0.0"
 
-    # The cache is updated
+    # The clone is updated
     $clone | repo update
     cd $clone
     let tags = git tag | complete | get stdout | str trim
@@ -119,7 +119,7 @@ def "tags lists all tags and only tags" [] {
     $remote | tag "v1.0.0"
     $remote | commit-file "other.nu" "print other"
     $remote | tag "v2.0.0"
-    $clone | repo cache $remote
+    $clone | repo clone $remote
 
     let tags = $clone | repo tags
 
@@ -143,7 +143,7 @@ def "work create exports worktrees to target path" [] {
     $remote | tag "v1.0.0"
     $remote | commit-file "two.nu" "print two"
     $remote | tag "v2.0.0"
-    $clone | repo cache $remote
+    $clone | repo clone $remote
 
     let work1 = $dir | path join "work1"
     let work2 = $dir | path join "work2"
@@ -166,7 +166,7 @@ def "work list shows existing worktrees" [] {
     $remote | tag "v1.0.0"
     $remote | commit-file "two.nu" "print two"
     $remote | tag "v2.0.0"
-    $clone | repo cache $remote
+    $clone | repo clone $remote
     let work1 = $dir | path join "work1"
     let work2 = $dir | path join "work2"
     $work1 | repo work create $clone "refs/tags/v1.0.0"
