@@ -34,7 +34,9 @@ def validate []: record -> record {
 export def repo-path []: record<scheme: string, host: string, path: string, fragment: string> -> string {
     let unsafe_chars = '[^a-zA-Z0-9_-]'
     let escaped = $in.path | str replace --all --regex $unsafe_chars "_"
-    let slug = $"($in.scheme)/($in.path)"
-    let hash = $slug | hash md5 # MD5 is good enough for this
+
+    let slug = $"($in.host)/($in.path)"
+    let hash = $slug | hash md5 # MD5 is good enough for this given we include the path anyway
+
     [ $escaped, $hash ] | str join "-"
 }

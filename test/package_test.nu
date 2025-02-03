@@ -87,7 +87,8 @@ def "repo-path includes hash of host and path" [] {
 
     let result = $pkg | package repo-path
 
-    assert ($result like "-67af6fce8a9af3e8593b3fb2ea4643f7$")
+    let hash = "example.com/../some\\repo'\"" | hash md5
+    assert ($result like $"-($hash)$")
 }
 
 def catch-error [job: closure]: nothing -> string {
