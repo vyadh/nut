@@ -22,3 +22,9 @@ export def repos-dir [] {
     mkdir $dir
     $dir
 }
+
+export def versions-dir [] {
+    let dir = data-dir | path join "versions"
+    mkdir $dir
+    $dir
+}

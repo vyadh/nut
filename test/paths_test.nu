@@ -46,3 +46,14 @@ def "repo-dir is overridable" [] {
         )
     }
 }
+
+# [test]
+def "version-dir is overridable" [] {
+    with-env { XDG_DATA_HOME: $in.temp } {
+        let dir = paths versions-dir
+
+        assert equal $dir (
+            $in.temp | path join "nut" | path join "versions"
+        )
+    }
+}

@@ -123,13 +123,15 @@ def "tags lists all tags and only tags" [] {
 
     let tags = $clone | repo tags
 
-    assert equal ($tags | reject created) [
+    assert equal ($tags | reject created commit) [
         { name: "v1.0.0" }
         { name: "v2.0.0" }
     ]
     for $tag in $tags {
         let recently = (date now) - 10sec
         assert ($tag.created > $recently)
+
+        assert ($tag.commit like '[0-9a-f]{40}')
     }
 }
 

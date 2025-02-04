@@ -91,6 +91,23 @@ def "repo-path includes hash of host and path" [] {
     assert ($result like $"-($hash)$")
 }
 
+# [test]
+def "commit-path includes hash of host and path" [] {
+    let pkg = {
+        scheme: "https"
+        host: "example.com"
+        path: "repo"
+        fragment: "component"
+        type: "something"
+        commit: "1234567890"
+    }
+
+    let result = $pkg | package commit-path
+
+    let url_hash = "example.com/repo" | hash md5
+    assert equal $result $"repo-($url_hash)/1234567890"
+}
+
 def catch-error [job: closure]: nothing -> string {
     try {
         do $job

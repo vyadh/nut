@@ -1,7 +1,7 @@
 
 # Resolve package information to a canonical form.
 export def resolve [
-    type: string, version: string
+    type: string, version?: string
 ]: string -> record<scheme: string, host: string, path: string, fragment: string, type: string, version: string> {
     let url = $in | url parse | validate
 
@@ -31,7 +31,7 @@ def validate []: record -> record {
 }
 
 # todo perhaps in a paths.nu?
-export def repo-path []: record<scheme: string, host: string, path: string, fragment: string> -> string {
+export def repo-path []: record<host: string, path: string> -> string {
     let unsafe_chars = '[^a-zA-Z0-9_-]'
     let escaped = $in.path | str replace --all --regex $unsafe_chars "_"
 
@@ -39,4 +39,10 @@ export def repo-path []: record<scheme: string, host: string, path: string, frag
     let hash = $slug | hash md5 # MD5 is good enough for this given we include the path anyway
 
     [ $escaped, $hash ] | str join "-"
+}
+
+export def commit-path []: record<host: string, path: string, commit: string> -> string {
+    let pkg = $in
+    let repo_path = $pkg | repo-path
+    $repo_path | path join $pkg.commit
 }
