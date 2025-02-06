@@ -23,7 +23,7 @@ Nut is a distributed package management concept that was born out of the observa
 
 - A package index is not required. 
 - Explicit support for a package manager by the code author is not required.
-- Industry standards and available infrastructure already provide everything a package manager needs (Git, and optionally an OCI registry).
+- Industry standards and available infrastructure already provide everything a package manager needs (Git, and optionally an OCI registry and signing infrastructure).
 
 With design considerations that go much further:
 - There is a scale of needs from somebody's coding itch to enterprise supported software. Both are valuable to their respective audience. The key is knowing what you're consuming.

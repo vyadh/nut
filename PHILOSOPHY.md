@@ -2,7 +2,7 @@
 
 This pages lays out the Nutopean Philosophy driving this project. Or, in less whimsical terms, the background thinking for what a modern package manager should be.
 
-This is not to say that a Nutty approach will solve all mentioned problems, only that they are acknowledged and considered as part of the design. To mitigate what we can as functionality is delivered. Basic functionality first. A bad Nut is one that nobody wants to crack open.
+This is not to say that a Nutty approach will solve all mentioned problems, only that they are acknowledged and considered as part of the design. To mitigate what we can as functionality is delivered. Basic and stable functionality first. A bad Nut is one that nobody wants to crack open.
 
 Much of this document is based on modern packaging and security good practice. Where a section strays into the realm of the opinionated, it is noted as such.
 
@@ -31,31 +31,31 @@ Where possible we should lean to or encourage proven practices and standards, in
 
 A central package registry provides a single point of failure for the entire ecosystem. If the registry is compromised, all packages are compromised. If the registry goes down, all packages are unavailable. If the registry is slow, all packages are slow.
 
-Reasonably concerns and in most cases unlikely enough not to be major concerns. However, if the registry is unnecessary, why have it at all?
+Reasonable concerns but in most cases unlikely enough not to be a major issue outside of enterprise settings where the only acceptable dependencies are the ones you have a contract for. However, if the registry is unnecessary, why have it at all?
 
 
 ## Multiple Points of Failure
 
-Adding a distributed model for package management and having an outage of one package source remove the ability to use the intended project is a valid concern. It would be quite easy to make availability worse.
+Naively adding a distributed model for package management and having an outage of one package source remove the ability to use the intended project is a valid concern. It would be quite easy to make availability worse.
 
-However, leveraging tools such as Git, which is already distributed, and the ability to mirror repositories as a part of normal operation, can mitigate this risk. For the enterprise, some of the enterprise caching proxy managers available today also support Git repositories in the same way as they do for other package types.
+However, leveraging tools such as Git, which is already distributed, and the ability to mirror repositories as a part of normal operation, can mitigate this risk. For the enterprise, caching proxy managers available today also support Git repositories in the same way as they do for other package types.
 
-It doesn't make the problem go away, and ill-fitting choices for binary hosting by package authors create problems for corporate IT, but a Nut-flavoured pressure to make it easy to do the right thing and hard to do the wrong thing may be helpful in making Nushell easy for enterprise-level adoption.
+It doesn't make the problem go away, and ill-fitting choices for binary hosting by package authors create problems for corporate IT. A Nut-flavoured pressure to make it easy to do the right thing and hard to do the wrong thing may be helpful in making Nushell easier for enterprise-level adoption.
 
 
 ## Discovery
 
-This is what a package index is uniquely suited to solve and at scale. It's also not a problem that needs to be solved until scale demands it, or by the package manager itself.
+Discovery is what a package index is uniquely suited to solve, and at scale. It's also not a problem that needs to be solved until scale demands it, or by the package manager itself.
 
 
 ## Scale
 
-While Nushell is popular, there is unlikely the dedicated resourcing required to vet new packages and/or remove malicious ones with a reliable community-provided SLA. Operating a package index is likely to be an interesting challenge, but a lot of the time it doesn't sound fun. Instead, the focus should be on using technology to reduce the need for an index, and to put the visibility and power in the hands of the package consumer. 
+While Nushell is popular, there is unlikely the dedicated resourcing required to vet new packages and/or remove malicious ones with a reliable community-provided SLA. Operating a package index is likely to be an interesting challenge, but a lot of the time it's simply a chore. Instead, the focus should be on using technology to reduce the need for an index, and to put the visibility and power in the hands of the package consumer. 
 
 
 ## Minimal Attack Surface
 
-There are largely two different types of dependencies, those that are required or helpful as part of developing the project itself, and those that are required for a downstream project to use it. We should not inflict our development-level choices downstream or imply they should be distributed unnecessarily.
+There are largely two different types of dependencies, those that are required or helpful as part of developing the project itself, and those that are required for a downstream project to use it. We should not inflict our development-level choices downstream or imply they should be required at runtime, along with any vulnerabilitiee they may contain..
 
 
 ## Binaries

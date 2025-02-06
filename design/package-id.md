@@ -1,17 +1,17 @@
 # Package Id
 
-In a distributed package system, a reference to a package needs to be globally unique. One disadvantage a distributed approach has over a traditional registry approach is that the package name will necessarily be longer.
+In a distributed package system, a reference to a package needs to be globally unique. The disadvantage of a distributed approach being that the package name will necessarily be longer.
 
 
 # Unique Identifier
 
-The package `name` is how many package management tools would represent as a `name` of the package. In a distributed system, this `name` would need to be a globally-unique reference. Since the package is sourced from this identifier, there is no ambiguity between this and other packages, and only the owner of this repository would be able to publish packages.
+The package `name` is the same as many package management tools would represent the `name` of the package. In a distributed system, this `name` would need to be a globally-unique reference. Since the package is sourced from this identifier, there is no ambiguity between this and other packages, and only the owner of this repository would be able to publish packages.
 
 With a unique identifier, typo-squatting attacks become more obvious. For example, a package being installed from `nushell/nupm` rather than `attacker/nupm`. Contrast this with `npm install bable` or `pip install reqests` where the typos in both places are easy to miss.
 
-Given this kind of package id is longer than a package name in a system that has a registry, that is also a benefit as it's less likely to be typed wrongly and more likely copy/pasted. Granted, there is still the issue with a typo in the provider `github.com/microsoft/azure-cli` versus `github.com/microsft/azure-cli` but at the same time, such blatant organisation name squatting on providers like GitHub seems less likely than for any particular package.
+Given this kind of package id is longer than a package name in a system that has a registry, that at least has the benefit as it's less likely to be typed wrongly and more likely copy/pasted. There is also the issue with a typo in the provider `github.com/microsoft/azure-cli` versus `github.com/microsft/azure-cli` but at the same time, such blatant organisation name squatting on providers like GitHub seems less likely than for any particular package.
 
-If a repository is renamed or moved withing a Git hosting provider, an HTTP redirect is usually done. This means that the `id` can be considered stable even if the repository is moved. However, we should emit a warning for usages to update.
+If a repository is renamed or moved withing a Git hosting provider, an HTTP redirect is usually performed. This means that the `id` can be considered stable even if the repository is moved. However, we should emit a warning for usages to update.
 
 It isn't ideal to have a package id that is a direct location of a package, but the simplicity benefits outweigh the downsides, and Nut is far from the only package manager to take this approach.
 
@@ -27,15 +27,15 @@ For our purposes, we would want to encode the following information:
 
 Nut could have used a URI to classify packages as it's a convenient and standard unique identifier for the package. However, it's longer than really necessary and it begs the question of what would be the scheme.
 
-However, there are various disadvantages to using a URI:
-- Using `nut://` would be on every package, so it seems redundant.
+Exploring that, tye disadvantages to using a URI are:
+- Using `nut://` on every package is redundant.
 - Adding something for our different types of packages would be useful, but that would suggest something like `git://` but this might imply Nut uses Git's unsecured protocol, so it's best to avoid the confusion.
 - Users may assume the URIs we specify are also URLs, which is not necessarily the case. The mechanism to retrieve the package may depend on the type of module for example.
 
 
 ## Id
 
-Nut uses the more brief `<domain>/<path>` conversion as it's short and used by other package managers like Go and Docker so it would likely be more familiar.
+Nut uses `https://<domain>/<path>` as it's short enough and used by other package managers like Go and Docker so it would likely be more familiar.
 
 A package manager should not allow the ability to specify user information or port as part of our URI as they are no part of the unique name and a security risk. These should be configured elsewhere.
 
@@ -54,7 +54,7 @@ Contrary to Git remotes above, an `id` for a package could also be a local path.
 This can simply be indicated a non-domain format of the name, indicating it's a local package. For example:
 
 ```
-/home/user/path/to/package
+file:///home/user/path/to/package
 ```
 
 We need to pay attention on how to support both absolute and relative paths, as well it as it being able to work on both Unixy-style and Windows filesystems.
