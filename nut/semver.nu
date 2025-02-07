@@ -6,59 +6,29 @@
 #
 
 # Suggested regex pattern from the spec
-# TODO add optional 'v' prefix here?
 const pattern = '^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$'
 
-export def valid []: list<string> -> list<string> {
-    $in | where { |version|
-        not ($version | resolve | is-empty)
-    }
+export def valid []: string -> bool {
+    ($in | find --regex $pattern) != null
 }
 
-export def sorted []: list<string> -> list<string> {
-    let resolved = $in
-        | each { |version|
-            let resolved = $version | resolve
-            { original: $version, resolved: $resolved }
-        }
-
-    # Test specifically as error does not bubble up within an `each`
-    let invalids = $resolved
-        | where { $in.resolved | is-empty }
-        | each { $in.original }
-    if not ($invalids | is-empty) {
-        error make { msg: $"Invalid semver versions: ($invalids | str join ', ')" }
-    }
-
-    $resolved
-        | each { |attempt|
-            {
-                original: $attempt.original
-                resolved: ($attempt | get resolved | first)
-            }
-        }
-        | sort-by --custom { |a, b|
-            (compare ($a | get resolved) ($b | get resolved)) < 0
-        }
-        | each { |row| $row.original }
-}
-
-# Returns a one-element table of the components if the version matches the spec.
-# Otherwise, returns an empty table.
-def resolve []: string -> table<major: int, minor: int, patch: int, prerelease: string, build> {
-    let result = $in | parse --regex $pattern
+# Returns a record of the components if the version matches the spec.
+# Otherwise, throws an error.
+export def resolve []: string -> record<major: int, minor: int, patch: int, prerelease: string, build> {
+    let version = $in
+    let result = $version | parse --regex $pattern
 
     if ($result | is-empty) {
-        []
+        error make { msg: $"Invalid version: ($version)" }
     } else {
         let row = $result | first
-        [{
+        {
             major: ($row.major | into int)
             minor: ($row.minor | into int)
             patch: ($row.patch | into int)
             prerelease: $row.prerelease
             build: $row.buildmetadata
-        }]
+        }
     }
 }
 
@@ -67,7 +37,7 @@ def resolve []: string -> table<major: int, minor: int, patch: int, prerelease: 
 #   pre-release existence lower than non-pre-release
 #   pre-release version rules
 #   no precedence: build
-def compare [
+export def compare [
     a: record<major: int, minor: int, patch: int, prerelease: string, build>
     b: record<major: int, minor: int, patch: int, prerelease: string, build>
 ]: nothing -> int {

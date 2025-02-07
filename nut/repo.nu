@@ -15,11 +15,11 @@ export def update []: string -> nothing {
     git fetch --tags; ignore
 }
 
-export def tags []: string -> list<record<created: datetime, commit: string, name: string>> {
+export def tags []: string -> list<record<created: datetime, commit: string, tag: string>> {
     let path = $in
     cd $path
 
-    let format = '{ created: "%(creatordate:iso8601-strict)" commit: "%(objectname)" name: "%(refname:short)" }'
+    let format = '{ created: "%(creatordate:iso8601-strict)" commit: "%(objectname)" tag: "%(refname:short)" }'
 
     git for-each-ref --sort=creatordate --format $format refs/tags
         | $"([$in])"

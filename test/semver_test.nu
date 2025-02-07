@@ -1,28 +1,29 @@
 use std assert
 source ../nut/semver.nu
+use errors.nu catch-error
 
 # [test]
 def "resolve versions that do not match the spec" [] {
-    assert equal ("1" | resolve) []
-    assert equal ("1.0" | resolve) []
-    assert equal ("1.0.a" | resolve) []
-    assert equal ("01.0.0" | resolve) []
-    assert equal ("1.0.0+a+b" | resolve) []
-    assert equal ("1.0.0-snapshot+a+b" | resolve) []
-    assert equal ("1.0.0.0" | resolve) []
-    assert equal ("1.0.0-" | resolve) []
-    assert equal ("1.0.0+" | resolve) []
-    assert equal ("1.0.0-+" | resolve) []
+    assert equal (catch-error { "1" | resolve }) "Invalid version: 1"
+    assert equal (catch-error { "1.0" | resolve }) "Invalid version: 1.0"
+    assert equal (catch-error { "1.0.a" | resolve }) "Invalid version: 1.0.a"
+    assert equal (catch-error { "01.0.0" | resolve }) "Invalid version: 01.0.0"
+    assert equal (catch-error { "1.0.0+a+b" | resolve }) "Invalid version: 1.0.0+a+b"
+    assert equal (catch-error { "1.0.0-snapshot+a+b" | resolve }) "Invalid version: 1.0.0-snapshot+a+b"
+    assert equal (catch-error { "1.0.0.0" | resolve }) "Invalid version: 1.0.0.0"
+    assert equal (catch-error { "1.0.0-" | resolve }) "Invalid version: 1.0.0-"
+    assert equal (catch-error { "1.0.0+" | resolve }) "Invalid version: 1.0.0+"
+    assert equal (catch-error { "1.0.0-+" | resolve }) "Invalid version: 1.0.0-+"
 }
 
 # [test]
 def "resolve versions that match the spec" [] {
-    assert equal ("1.2.3" | resolve) [{ major: 1, minor: 2, patch: 3, prerelease: "", build: "" }]
-    assert equal ("1.0.0-pre" | resolve) [{ major: 1, minor: 0, patch: 0, prerelease: "pre", build: "" }]
-    assert equal ("1.0.0-pre.123" | resolve) [{ major: 1, minor: 0, patch: 0, prerelease: "pre.123", build: "" }]
-    assert equal ("1.0.0-pre+build" | resolve) [{ major: 1, minor: 0, patch: 0, prerelease: "pre", build: "build" }]
-    assert equal ("1.0.0-pre+build.123" | resolve) [{ major: 1, minor: 0, patch: 0, prerelease: "pre", build: "build.123" }]
-    assert equal ("1.0.0-pre.123+build.456" | resolve) [{ major: 1, minor: 0, patch: 0, prerelease: "pre.123", build: "build.456" }]
+    assert equal ("1.2.3" | resolve) { major: 1, minor: 2, patch: 3, prerelease: "", build: "" }
+    assert equal ("1.0.0-pre" | resolve) { major: 1, minor: 0, patch: 0, prerelease: "pre", build: "" }
+    assert equal ("1.0.0-pre.123" | resolve) { major: 1, minor: 0, patch: 0, prerelease: "pre.123", build: "" }
+    assert equal ("1.0.0-pre+build" | resolve) { major: 1, minor: 0, patch: 0, prerelease: "pre", build: "build" }
+    assert equal ("1.0.0-pre+build.123" | resolve) { major: 1, minor: 0, patch: 0, prerelease: "pre", build: "build.123" }
+    assert equal ("1.0.0-pre.123+build.456" | resolve) { major: 1, minor: 0, patch: 0, prerelease: "pre.123", build: "build.456" }
 }
 
 # [test]
@@ -43,7 +44,7 @@ def "valid matches only conforming semver versions" [] {
         "0.3.0"
     ]
 
-    assert equal ($versions | valid) [
+    assert equal ($versions | where { $in | valid }) [
         "0.2.0"
         "0.1.0"
         "0.3.0"
@@ -81,6 +82,11 @@ def "compare pre-release is always less than final" [] {
 }
 
 # [test]
+def "compare pre-release still after previous final" [] {
+    assert equal (parse-compare "0.1.0" "0.1.1-alpha") (-1)
+}
+
+# [test]
 def "compare pre-release compared numerically" [] {
     assert equal (parse-compare "0.1.0-5" "0.1.0-1") (4)
     assert equal (parse-compare "0.1.0-alpha.1" "0.1.0-alpha.10") (-9)
@@ -106,23 +112,6 @@ def "compare pre-release by spec rule" [] {
     assert equal (parse-compare "0.1.0-beta.2" "0.1.0-beta.11") (-9)
     assert equal (parse-compare "0.1.0-beta.11" "0.1.0-rc.1") (-1)
     assert equal (parse-compare "0.1.0-rc.1" "0.1.0") (-1)
-}
-
-# [test]
-def "sorted error when non-versions exist" [] {
-    let versions = [
-        "0.1.0"
-        "a.b.c"
-        "0.3.0"
-        "1.2.00"
-    ]
-
-    try {
-        $versions | sorted
-        assert false "should throw error"
-    } catch { |error|
-        assert equal ($error | get msg) "Invalid semver versions: a.b.c, 1.2.00"
-    }
 }
 
 # [test]
@@ -174,7 +163,27 @@ def "sorted by spec example" [] {
 }
 
 def parse-compare [a: string, b: string]: nothing -> int {
-    let a = $a | resolve | first
-    let b = $b | resolve | first
+    let a = $a | resolve
+    let b = $b | resolve
     compare $a $b
+}
+
+def sorted []: list<string> -> list<string> {
+    let resolved = $in
+        | each { |version|
+            let resolved = $version | resolve
+            { original: $version, resolved: $resolved }
+        }
+
+    $resolved
+        | each { |attempt|
+            {
+                original: $attempt.original
+                resolved: ($attempt | get resolved)
+            }
+        }
+        | sort-by --custom { |a, b|
+            (compare ($a | get resolved) ($b | get resolved)) < 0
+        }
+        | get original
 }

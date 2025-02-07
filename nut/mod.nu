@@ -1,6 +1,7 @@
 use paths.nu
 use package.nu
 use repo.nu
+use versions.nu
 
 # Add the package to the current project.
 # A package can be a fully-defined id, or a short code for a package that has already
@@ -20,12 +21,11 @@ export def add-package [
     # todo we don't need to update if we just cloned fresh
     $repo_dir | repo update
 
-    let tags = $repo_dir | repo tags | select name commit
+    let tags = $repo_dir | repo tags | select tag commit
+    print $tags
 
     let tag = if $version == null {
-        # todo sort versions via semver
-        # todo what if none?
-        let tag = $tags | first
+        $tags | versions resolved | versions latest
     } else {
     #    let versions = $tags | where { |tag| $tag.name == $version or $tag.name == $"v($version)" }
     #    if $versions | is-empty {
@@ -38,9 +38,10 @@ export def add-package [
         null
     }
 
-    let pkg = $pkg | insert ref $tag.name | insert commit $tag.commit
-    let work_dir = paths versions-dir | path join ($pkg | package commit-path)
-    $work_dir | repo work create $repo_dir $"refs/tags/($tag.name)"
+    let pkg = $pkg | insert ref $tag.tag | insert commit $tag.commit
+    print $pkg
+    #let work_dir = paths versions-dir | path join ($pkg | package commit-path)
+    #$work_dir | repo work create $repo_dir $"refs/tags/($tag.name)"
 
     # turn into ref
     #
@@ -71,3 +72,5 @@ export def upgrade-package [
     --update         # By default work offline, but with this flag the package sources are updated.
 ]: nothing -> nothing {
 }
+
+# todo list versions in a table, which is reverse semver sorted
