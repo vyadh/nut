@@ -79,3 +79,59 @@ def "latest calculated by semver" [] {
         semver: { major: 1, minor: 1, patch: 1, prerelease: "", build: "" }
     }
 }
+
+# [test]
+def "locate no matching version throws error" [] {
+    let data = [
+        { tag: "v1.0.0", version: "1.0.0" }
+    ]
+
+    let result = catch-error { $data | versions locate "1.1.0" }
+
+    assert equal $result "Version not found: 1.1.0"
+}
+
+# [test]
+def "locate version from v tag" [] {
+    let data = [
+        { tag: "v1.0.0", version: "1.0.0" }
+    ]
+
+    let result = $data | versions locate "v1.0.0"
+
+    assert equal $result { tag: "v1.0.0", version: "1.0.0" }
+}
+
+# [test]
+def "locate version from version field" [] {
+    let data = [
+        { tag: "v1.0.0", version: "1.0.0" }
+    ]
+
+    let result = $data | versions locate "1.0.0"
+
+    assert equal $result { tag: "v1.0.0", version: "1.0.0" }
+}
+
+# [test]
+def "locate uses tag version by preference when duplicates" [] {
+    let data = [
+        { tag: "1.0.0", version: "1.0.0" }
+        { tag: "v1.0.0", version: "1.0.0" }
+    ]
+
+    let result = $data | versions locate "v1.0.0"
+
+    assert equal $result { tag: "v1.0.0", version: "1.0.0" }
+}
+
+# [test]
+def "locate does not match on non-existing v" [] {
+    let data = [
+        { tag: "1.0.0", version: "1.0.0" }
+    ]
+
+    let result = catch-error { $data | versions locate "v1.0.0" }
+
+    assert equal $result "Version not found: v1.0.0"
+}

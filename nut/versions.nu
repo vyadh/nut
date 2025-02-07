@@ -22,3 +22,21 @@ export def latest []: table<tag: string, commit: string, version: string, semver
         }
         | first
 }
+
+export def locate [version: string]: table<tag: string, version: string> -> record<tag: string, commit: string, version: string, semver: record> {
+    let tags = $in
+
+    let exact_match = $tags | where { $in.tag == $version }
+    if not ($exact_match | is-empty) {
+        return ($exact_match | first)
+    }
+
+    let versions = $tags | where { $in.version == $version or $in.version == $"v($version)" }
+    if ($versions | is-empty) {
+        error make { msg: $"Version not found: ($version)" }
+    } else if ($versions | length) > 1 {
+        error make { msg: $"Multiple versions found for ($version): ($versions | str join ',')" }
+    } else {
+        $versions | first
+    }
+}

@@ -21,38 +21,25 @@ export def add-package [
     # todo we don't need to update if we just cloned fresh
     $repo_dir | repo update
 
-    let tags = $repo_dir | repo tags | select tag commit
-    print $tags
+    let versions = $repo_dir
+        | repo tags
+        | select tag commit
+        | versions resolved
+    print $versions
 
     let tag = if $version == null {
-        $tags | versions resolved | versions latest
+        $versions | versions resolved | versions latest
     } else {
-    #    let versions = $tags | where { |tag| $tag.name == $version or $tag.name == $"v($version)" }
-    #    if $versions | is-empty {
-    #        error make { msg: $"Version ($version) not found in ($tags)" }
-    #    } else if ($versions | length > 1) {
-    #        error make { msg: $"Multiple versions found for ($version) in ($versions)" }
-    #    } else {
-    #        $versions | first | get name
-    #    }
-        null
+        $versions | versions resolved | versions locate $version
     }
+
+    # todo use HEAD if no version found?
 
     let pkg = $pkg | insert ref $tag.tag | insert commit $tag.commit
     print $pkg
     #let work_dir = paths versions-dir | path join ($pkg | package commit-path)
     #$work_dir | repo work create $repo_dir $"refs/tags/($tag.name)"
 
-    # turn into ref
-    #
-    # if version is specified
-    #   find tag (with v)
-    #
-    # if version not specified
-    #   find all tags
-    #
-    # use commit
-    # worktree it
     # add to project
     # add to lockfile
     # use it
