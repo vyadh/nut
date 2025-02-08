@@ -98,6 +98,86 @@ def "has dependency searches across categories" [] {
     assert equal ($data | project has dependency ("github.com/example/dev" | pkg)) true
 }
 
+# [test]
+def "add dependency to empty project" [] {
+    let result = { } | project add dependency "runtime" {
+        host: "github.com"
+        path: "/example/project"
+        fragment: "component"
+        version: "1.1.0"
+    }
+
+    assert equal $result {
+        dependencies: {
+            runtime: {
+                "github.com/example/project#component": { version: "1.1.0" }
+            }
+        }
+    }
+}
+
+# [test]
+def "add dependency to existing project" [] {
+    let project = {
+        license: "MIT"
+        dependencies: {
+            runtime: {
+                "github.com/example/project": { version: "0.1.0" }
+            }
+            development: {
+                "github.com/example/nutest": { version: "1.0.0" }
+            }
+        }
+    }
+
+    let result = $project | project add dependency "runtime" {
+        host: "gitlab.com"
+        path: "/awesome/project"
+        fragment: ""
+        version: "1.1.0"
+    }
+
+    assert equal $result {
+        license: "MIT"
+        dependencies: {
+            runtime: {
+                "github.com/example/project": { version: "0.1.0" }
+                "gitlab.com/awesome/project": { version: "1.1.0" }
+            }
+            development: {
+                "github.com/example/nutest": { version: "1.0.0" }
+            }
+        }
+    }
+}
+
+# [test]
+def "write project file with content" [] {
+    cd $in.dir
+    let data = {
+        license: "MIT"
+    }
+
+    let result = $data | project write
+
+    assert equal $result $data
+    assert equal (open "nut.nuon") { license: "MIT" }
+}
+
+# [test]
+def "write project overwrites previous" [] {
+    cd $in.dir
+    "{}" | save "nut.nuon"
+    let data = {
+        license: "MIT"
+    }
+
+    let result = $data | project write
+
+    assert equal $result $data
+    assert equal (open "nut.nuon") { license: "MIT" }
+}
+
 def pkg []: string -> record<host: string, path: string, fragment: string> {
     $"https://($in)" | package resolve "module"
 }

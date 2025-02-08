@@ -23,6 +23,7 @@ use versions.nu
 export def add-package [
     package: string    # The package reference URL, which could be local or remote
     --type: string = "module" # The type of the package, currently only module is supported
+    --category: string = "runtime" # The category of dependency, either runtime or development
     --version: string  # The version of the package to add, or latest if not specified
 ]: nothing -> nothing {
 
@@ -31,7 +32,7 @@ export def add-package [
 
     let project = project read
     if ($project | project has dependency $pkg) {
-        error make { msg: $"Package ($pkg.name) already exists in the project" }
+        error make { msg: $"Package already exists in the project: ($package)" }
     }
 
     $clone_dir | repo clone $package
@@ -51,7 +52,11 @@ export def add-package [
     }
 
     # TODO standardise on "revision" or "commit"
-    let pkg = $pkg | insert ref $tag.tag | insert commit $tag.commit
+    let pkg = $pkg
+        | insert ref $tag.tag
+        | reject version # Use normalised semver-compatible version from the tag
+        | insert version $tag.version
+        | insert commit $tag.commit
     print $pkg
 
     let worktree = $pkg
@@ -59,9 +64,14 @@ export def add-package [
         | repo work upsert $clone_dir $pkg.commit
     print $worktree
 
-    # add to project
+    $project
+        | project add dependency $category $pkg
+        | project write
+
     # add to lockfile
     # use it
+
+    ignore
 }
 
 # Update package information being currently tracked. If no package is specified,
