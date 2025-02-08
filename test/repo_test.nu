@@ -17,7 +17,7 @@ def init []: nothing -> record {
 }
 
 # [after-each]
-def remove []: nothing -> nothing {
+def remove []: record -> nothing {
     rm --recursive --force $in.dir
 }
 

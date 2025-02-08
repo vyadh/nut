@@ -2,8 +2,18 @@
 # TODO This top-level module is a PoC.
 # TODO It is here to explore what is required from the supporting modules.
 
+# Needed operations:
+# - 🚧 ☑️ add a package to the project
+# - remove a package from the project
+# - upgrade a package in the project to latest of available clone data
+# - upgrade all packages in the project to latest of available clone data
+# - change project file, update lock file from this project metadata (update?)
+# - "apt update" for all packages in the project (no changes?)
+# - is the update + upgrade split necessary? Maybe we just need to have an --offline option?
+
 use paths.nu
 use package.nu
+use project.nu
 use repo.nu
 use versions.nu
 
@@ -19,7 +29,10 @@ export def add-package [
     let pkg = $package | package resolve $type $version
     let clone_dir = $pkg | paths clone-dir
 
-    # todo check if the package is already added and abort
+    let project = project read
+    if ($project | project has dependency $pkg) {
+        error make { msg: $"Package ($pkg.name) already exists in the project" }
+    }
 
     $clone_dir | repo clone $package
     # todo we don't need to update if we just cloned fresh

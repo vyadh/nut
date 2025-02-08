@@ -53,8 +53,28 @@ def "resolve validates when unsupported urls" [] {
 }
 
 # [test]
-def "parse with fragment" [] {
-    let result = "https://github.com/vyadh/nut#semver" | package resolve "" "" | get fragment
+def "resolve with fragment" [] {
+    let result = "https://github.com/vyadh/nut#semver"
+        | package resolve "" ""
+        | get fragment
 
     assert equal $result "semver"
+}
+
+# [test]
+def "id from package data" [] {
+    let package = { host: "example.com", path: "/path/repo", fragment: "" }
+
+    let result = $package | package id
+
+    assert equal $result "example.com/path/repo"
+}
+
+# [test]
+def "id from package data with fragment" [] {
+    let package = { host: "example.com", path: "/path/repo", fragment: "util" }
+
+    let result = $package | package id
+
+    assert equal $result "example.com/path/repo#util"
 }

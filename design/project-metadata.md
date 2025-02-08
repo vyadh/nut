@@ -33,25 +33,25 @@ For development purposes, it might be convenient to "publish" against a stable a
 
 ## Dependencies
 
-The `nut.nuon` file can define dependencies that would be made available to the project. Those dependencies that have their dependencies.
+The `nut.nuon` file can define dependencies that would be made available to the project. Those dependencies can have their own dependencies.
 
 ```nushell
 {
   # ...
   
   dependencies: {
-    "runtime": [
-      { id: "github.com/vyadh/chestnuts", version: "v2.1.0" }
-      { id: "github.com/nushell/nu_scripts/modules/docker", version: "v0.5.0" }
-    ]
-    "development": [
-      { id: "github.com/vyadh/nutest", version: "v1.0.0" }
+    "runtime": {
+      "github.com/vyadh/chestnuts": { version: "v2.1.0" }
+      "github.com/nushell/nu_scripts/modules/docker": { version: "v0.5.0" }
+    }
+    "development": {
+      "github.com/vyadh/nutest": { version: "v1.0.0" }
     }
   }
 }
 ```
 
-Versioning for sub-modules within a monorepo would follow the same pattern. Where a Git tag may exist for the main repository as `v1.2.3`, a submodule version would exist as `semver/v1.2.3`.
+Versioning for sub-modules within a monorepo would follow the same pattern. Where a Git tag may exist for the main repository as `v1.2.3`, a submodule tag could independently exist as `semver/v1.2.3` or inherit the global one.
 
 
 ## Types

@@ -17,6 +17,7 @@ export def latest []: table<tag: string, commit: string, version: string, semver
         error make { msg: "No versions found" }
     }
 
+    # todo exclude prerelease versions by default
     $versions
         | sort-by --reverse --custom { |a, b|
             (semver compare ($a | get semver) ($b | get semver)) < 0

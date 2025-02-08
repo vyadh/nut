@@ -29,3 +29,12 @@ def validate []: record -> record {
     }
     $url
 }
+
+export def id []: record<host: string, path: string, fragment: string> -> string {
+    let pkg = $in
+    if ($pkg.fragment | is-empty) {
+        $"($pkg.host)($pkg.path)"
+    } else {
+        $"($pkg.host)($pkg.path)#($pkg.fragment)"
+    }
+}
