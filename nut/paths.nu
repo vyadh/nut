@@ -1,5 +1,8 @@
+# Naming conventions for the command in this file:
+# - dir: an absolute path to a directory
+# - path: a relative path to a director
 
-export def config-dir [] {
+export def config-dir []: nothing -> path {
     let dir = $env.XDG_CONFIG_HOME?
         | default ($env.HOME | path join ".config")
         | path join "nut"
@@ -8,7 +11,7 @@ export def config-dir [] {
     $dir
 }
 
-export def data-dir [] {
+export def data-dir []: nothing -> path {
     let dir = $env.XDG_DATA_HOME?
         | default ($env.HOME | path join ".local" | path join "share")
         | path join "nut"
@@ -17,14 +20,40 @@ export def data-dir [] {
     $dir
 }
 
-export def repos-dir [] {
-    let dir = data-dir | path join "repos"
+export def clones-dir []: nothing -> path {
+    let dir = data-dir | path join "clones"
     mkdir $dir
     $dir
 }
 
-export def versions-dir [] {
-    let dir = data-dir | path join "versions"
+export def revisions-dir []: nothing -> path {
+    let dir = data-dir | path join "revisions"
     mkdir $dir
     $dir
+}
+
+export def clone-dir []: record<host: string, path: string> -> path {
+    let pkg = $in
+    clones-dir | path join ($pkg | package-path)
+}
+
+export def revision-dir []: record<host: string, path: string, commit: string> -> path {
+    let pkg = $in
+
+    revisions-dir
+        | path join ($pkg | package-path)
+        | path join $pkg.commit
+}
+
+def package-path []: record<host: string, path: string> -> path {
+    let pkg = $in
+
+    let unsafe_chars = '[^a-zA-Z0-9_-]'
+    let escaped = $in.path | str replace --all --regex $unsafe_chars "_"
+
+    let slug = $"($pkg.host)/($pkg.path)"
+    # MD5 is good enough for this, particularly as we include the path anyway
+    let hash = $slug | hash md5
+
+    [ $escaped, $hash ] | str join "-"
 }

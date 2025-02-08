@@ -14,23 +14,22 @@ export def add-package [
 
     # todo this also handles fragment but we have that above - we need to decide how we do it
     let pkg = $package | package resolve $type $version
-    let repos_dir = paths repos-dir
-    let repo_dir = $repos_dir | path join ($pkg | package repo-path)
+    let clone_dir = $pkg | paths clone-dir
 
-    $repo_dir | repo clone $package
+    $clone_dir | repo clone $package
     # todo we don't need to update if we just cloned fresh
-    $repo_dir | repo update
+    $clone_dir | repo update
 
-    let versions = $repo_dir
+    let versions = $clone_dir
         | repo tags
         | select tag commit
         | versions resolved
     print $versions
 
     let tag = if $version == null {
-        $versions | versions resolved | versions latest
+        $versions | versions latest
     } else {
-        $versions | versions resolved | versions locate $version
+        $versions | versions locate $version
     }
 
     # todo use HEAD if no version found?
@@ -38,7 +37,7 @@ export def add-package [
     let pkg = $pkg | insert ref $tag.tag | insert commit $tag.commit
     print $pkg
     #let work_dir = paths versions-dir | path join ($pkg | package commit-path)
-    #$work_dir | repo work create $repo_dir $"refs/tags/($tag.name)"
+    #$work_dir | repo work create $clone_dir $"refs/tags/($tag.name)"
 
     # add to project
     # add to lockfile

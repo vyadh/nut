@@ -29,20 +29,3 @@ def validate []: record -> record {
     }
     $url
 }
-
-# todo perhaps in a paths.nu?
-export def repo-path []: record<host: string, path: string> -> string {
-    let unsafe_chars = '[^a-zA-Z0-9_-]'
-    let escaped = $in.path | str replace --all --regex $unsafe_chars "_"
-
-    let slug = $"($in.host)/($in.path)"
-    let hash = $slug | hash md5 # MD5 is good enough for this given we include the path anyway
-
-    [ $escaped, $hash ] | str join "-"
-}
-
-export def commit-path []: record<host: string, path: string, commit: string> -> string {
-    let pkg = $in
-    let repo_path = $pkg | repo-path
-    $repo_path | path join $pkg.commit
-}
