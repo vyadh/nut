@@ -1,6 +1,7 @@
 use std assert
 use std null-device
 use ../nut/repo.nu
+use errors.nu catch-error
 
 # [before-each]
 def init []: nothing -> record {
@@ -182,6 +183,77 @@ def "work list shows existing worktrees" [] {
     ]
 }
 
+# [test]
+def "work upsert creates worktree if missing" [] {
+    let dir = $in.dir
+    let remote = $in.remote
+    let clone = $in.clone
+    $remote | create-repo
+    $remote | commit-file "file.nu" "print file"
+    $remote | tag "v1.0.0"
+    $clone | repo clone $remote
+    let work = $dir | path join "work"
+
+    let work_path = $work | repo work upsert $clone "refs/tags/v1.0.0"
+
+    assert equal $work_path $work
+    assert equal (open --raw ($work | path join "file.nu")) "print file"
+}
+
+# [test]
+def "work upsert reuses existing tracked worktree" [] {
+    let dir = $in.dir
+    let remote = $in.remote
+    let clone = $in.clone
+    $remote | create-repo
+    $remote | commit-file "file.nu" "print file"
+    $remote | tag "v1.0.0"
+    $clone | repo clone $remote
+    let revision = $clone | repo tags | first | get commit
+    let existing = $dir | path join "worktree" | repo work create $clone $revision
+
+    let worktree = $existing | repo work upsert $clone $revision
+
+    assert equal $worktree $existing
+    assert equal (open --raw ($worktree | path join "file.nu")) "print file"
+}
+
+# [test]
+def "work upsert fails if worktree directory already exists" [] {
+    let dir = $in.dir
+    let remote = $in.remote
+    let clone = $in.clone
+    $remote | create-repo
+    $remote | commit-file "file.nu" "print file"
+    $remote | tag "v1.0.0"
+    $clone | repo clone $remote
+    let revision = $clone | repo tags | first | get commit
+    let existing = $dir
+    mkdir $existing
+
+    let error = catch-error { $existing | repo work upsert $clone $revision }
+
+    assert equal $error $"Directory already exists at: ($existing)"
+}
+
+# [test]
+def "work upsert fails when creating duplicate worktree" [] {
+    let dir = $in.dir
+    let remote = $in.remote
+    let clone = $in.clone
+    $remote | create-repo
+    $remote | commit-file "file.nu" "print file"
+    $remote | tag "v1.0.0"
+    $clone | repo clone $remote
+    let revision = $clone | repo tags | first | get commit
+    let worktree1 = $dir | path join "worktree1" | repo work create $clone $revision
+    let worktree2 = $dir | path join "worktree2"
+
+    let error = catch-error { $worktree2 | repo work upsert $clone $revision }
+
+    assert equal $error $"Worktree already exists at: ($worktree1)"
+}
+
 def create-repo []: string -> nothing {
     let path = $in
     mkdir $path
@@ -202,7 +274,7 @@ def commit-file [file: string, content: string]: string -> nothing {
     let path = $in
     cd $path
 
-    $"print ($content)" | save $file
+    $content | save $file
     git add $file
     git commit --quiet --message $"Add ($file)"
 }

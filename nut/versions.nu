@@ -12,6 +12,7 @@ export def resolved []: table<tag: string, commit: string> -> table<tag: string,
 export def latest []: table<tag: string, commit: string, version: string, semver: record> -> record<tag: string, commit: string, version: string, semver: record> {
     let versions = $in
 
+    # todo use HEAD if no version found?
     if ($versions | is-empty) {
         error make { msg: "No versions found" }
     }

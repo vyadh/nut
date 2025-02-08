@@ -4,12 +4,16 @@
 
 ```nushell
 {
-  id: "git:github.com:vyadh/nut"
+  id: "github.com/vyadh/nut"
   type: module
   description: "A dependency management Nutopia"
   license: "MIT"
 }
 ```
+
+With Nut, this file is not required to define a package. It is enough for a Git repository to exist with some Nushell code in it.
+
+However, if this package file does exist, these items should be defined and a warning be emitted for nut operations when they are missing, except `id`, which is for informational purposes.
 
 ### Id
 
@@ -37,11 +41,11 @@ The `nut.nuon` file can define dependencies that would be made available to the 
   
   dependencies: {
     "runtime": [
-      { id: "git://github.com/vyadh/chestnuts", version: "v2.1.0" }
-      { id: "git://github.com/nushell/nu_scripts/modules/docker", version: "v0.5.0" }
+      { id: "github.com/vyadh/chestnuts", version: "v2.1.0" }
+      { id: "github.com/nushell/nu_scripts/modules/docker", version: "v0.5.0" }
     ]
     "development": [
-      { id: "git://github.com/vyadh/nutest", version: "v1.0.0" }
+      { id: "github.com/vyadh/nutest", version: "v1.0.0" }
     }
   }
 }

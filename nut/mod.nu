@@ -1,3 +1,7 @@
+
+# TODO This top-level module is a PoC.
+# TODO It is here to explore what is required from the supporting modules.
+
 use paths.nu
 use package.nu
 use repo.nu
@@ -12,9 +16,10 @@ export def add-package [
     --version: string  # The version of the package to add, or latest if not specified
 ]: nothing -> nothing {
 
-    # todo this also handles fragment but we have that above - we need to decide how we do it
     let pkg = $package | package resolve $type $version
     let clone_dir = $pkg | paths clone-dir
+
+    # todo check if the package is already added and abort
 
     $clone_dir | repo clone $package
     # todo we don't need to update if we just cloned fresh
@@ -32,12 +37,14 @@ export def add-package [
         $versions | versions locate $version
     }
 
-    # todo use HEAD if no version found?
-
+    # TODO standardise on "revision" or "commit"
     let pkg = $pkg | insert ref $tag.tag | insert commit $tag.commit
     print $pkg
-    #let work_dir = paths versions-dir | path join ($pkg | package commit-path)
-    #$work_dir | repo work create $clone_dir $"refs/tags/($tag.name)"
+
+    let worktree = $pkg
+        | paths revision-dir
+        | repo work upsert $clone_dir $pkg.commit
+    print $worktree
 
     # add to project
     # add to lockfile

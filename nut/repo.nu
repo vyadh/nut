@@ -19,7 +19,7 @@ export def tags []: string -> list<record<created: datetime, commit: string, tag
     let path = $in
     cd $path
 
-    let format = '{ created: "%(creatordate:iso8601-strict)" commit: "%(objectname)" tag: "%(refname:short)" }'
+    let format = '{ created: "%(creatordate:iso8601-strict)" commit: "%(objectname)" tag : "%(refname:short)" }'
 
     git for-each-ref --sort=creatordate --format $format refs/tags
         | $"([$in])"
@@ -29,21 +29,43 @@ export def tags []: string -> list<record<created: datetime, commit: string, tag
         }
 }
 
-export def "work create" [repo: string, ref: string]: string -> nothing {
-    let path = $in
-    cd $repo
+export def "work create" [clone: path, ref: string]: path -> path {
+    let worktree = $in
+    cd $clone
 
-    git worktree add --detach $path $ref; ignore
+    git worktree add --detach $worktree $ref
+
+    $worktree
 }
 
-export def "work list" []: string -> table<path: string, revision: string> {
-    let path = $in
-    cd $path
+export def "work list" []: path -> table<path: string, revision: string> {
+    let clone = $in
+    cd $clone
 
     git worktree list --porcelain
         | split row "\n\n"
         | each { parse "worktree {path}\nHEAD {revision}\ndetached" }
         | flatten
+}
+
+export def "work upsert" [clone: path, revision: string]: path -> string {
+    let worktree = $in
+
+    let existing = $clone
+        | work list
+        | where revision == $revision
+        | get path
+
+    if ($existing | is-empty) and ($worktree | path exists) {
+        error make { msg: $"Directory already exists at: ($worktree)" }
+    } else if ($existing | is-not-empty) and (($existing | first) != $worktree) {
+        error make { msg: $"Worktree already exists at: ($existing | first)" }
+    } else if ($existing | is-not-empty) and ($worktree | path exists) {
+        # Reuse existing worktree
+        $worktree
+    } else {
+        $worktree | work create $clone $revision
+    }
 }
 
 def --wrapped git [...args: string]: nothing -> string {
