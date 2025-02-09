@@ -12,6 +12,7 @@
 # - is the update + upgrade split necessary? Maybe we just need to have an --offline option?
 # - 🚧 add required overlays
 
+use overlays.nu
 use paths.nu
 use package.nu
 use project.nu
@@ -20,8 +21,7 @@ use versions.nu
 
 export def activate [] {
     # todo needs to clone repo and create worktree if not already
-
-    let project = project read
+    project read | overlays set-active
 }
 
 # Add the package to the current project.

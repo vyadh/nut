@@ -199,5 +199,5 @@ def "write project overwrites previous" [] {
 }
 
 def pkg []: string -> record<host: string, path: string, fragment: string> {
-    $"https://($in)" | package resolve "module"
+    $"https://($in)" | package from id
 }
