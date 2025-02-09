@@ -1,6 +1,6 @@
 use semver.nu
 
-export def resolved []: table<tag: string, commit: string> -> table<tag: string, commit: string, version: string, semver: record> {
+export def resolved []: table<tag: string, revision: string> -> table<tag: string, revision: string, version: string, semver: record> {
     let tags = $in
 
     $tags
@@ -9,7 +9,7 @@ export def resolved []: table<tag: string, commit: string> -> table<tag: string,
         | insert semver { $in.version | semver resolve }
 }
 
-export def latest []: table<tag: string, commit: string, version: string, semver: record> -> record<tag: string, commit: string, version: string, semver: record> {
+export def latest []: table<tag: string, revision: string, version: string, semver: record> -> record<tag: string, revision: string, version: string, semver: record> {
     let versions = $in
 
     # todo use HEAD if no version found?
@@ -25,7 +25,7 @@ export def latest []: table<tag: string, commit: string, version: string, semver
         | first
 }
 
-export def locate [version: string]: table<tag: string, version: string> -> record<tag: string, commit: string, version: string, semver: record> {
+export def locate [version: string]: table<tag: string, version: string> -> record<tag: string, revision: string, version: string, semver: record> {
     let tags = $in
 
     let exact_match = $tags | where { $in.tag == $version }

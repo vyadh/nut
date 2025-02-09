@@ -37,12 +37,12 @@ export def clone-dir []: record<host: string, path: string> -> path {
     clones-dir | path join ($pkg | package-path)
 }
 
-export def revision-dir []: record<host: string, path: string, commit: string> -> path {
+export def revision-dir []: record<host: string, path: string, revision: string> -> path {
     let pkg = $in
 
     revisions-dir
         | path join ($pkg | package-path)
-        | path join $pkg.commit
+        | path join $pkg.revision
 }
 
 def package-path []: record<host: string, path: string> -> path {

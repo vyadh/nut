@@ -26,7 +26,7 @@ The interesting property of `id` is that it no longer needs to be defined at all
 
 ### Git Tags
 
-The version of the package is dictated by the tags at that commit id. Initially, the package will not be available for publishing without a tag. Or put another way, publishing a package is simply the act of defining a tag.
+The version of the package is dictated by the tags at that revision. Initially, the package will not be available for publishing without a tag. Or put another way, publishing a package is simply the act of defining a tag.
 
 For development purposes, it might be convenient to "publish" against a stable a branch name but where the commits float. In this case, the `ref` can be used. See the dependencies section for more details.
 

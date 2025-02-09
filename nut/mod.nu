@@ -17,6 +17,11 @@ use project.nu
 use repo.nu
 use versions.nu
 
+export def activate [] {
+    # todo needs to close and worktree if not already
+
+}
+
 # Add the package to the current project.
 # A package can be a fully-defined id, or a short code for a package that has already
 # been added to a project on the system where the full id can be tab-completed.
@@ -41,7 +46,7 @@ export def add-package [
 
     let versions = $clone_dir
         | repo tags
-        | select tag commit
+        | select tag revision
         | versions resolved
     print $versions
 
@@ -51,25 +56,23 @@ export def add-package [
         $versions | versions locate $version
     }
 
-    # TODO standardise on "revision" or "commit"
     let pkg = $pkg
         | insert ref $tag.tag
-        | reject version # Use normalised semver-compatible version from the tag
+        | reject version # Use normalised semver-compatible version from the tag (todo: or remove adding above?)
         | insert version $tag.version
-        | insert commit $tag.commit
+        | insert revision $tag.revision
     print $pkg
 
     let worktree = $pkg
         | paths revision-dir
-        | repo work upsert $clone_dir $pkg.commit
+        | repo work upsert $clone_dir $pkg.revision
     print $worktree
 
     $project
         | project add dependency $category $pkg
         | project write
 
-    # add to lockfile
-    # use it
+    # todo if project activated, use as an overlay
 
     ignore
 }

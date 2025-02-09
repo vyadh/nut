@@ -124,7 +124,7 @@ def "tags lists all tags and only tags" [] {
 
     let tags = $clone | repo tags
 
-    assert equal ($tags | reject created commit) [
+    assert equal ($tags | reject created revision) [
         { tag: "v1.0.0" }
         { tag: "v2.0.0" }
     ]
@@ -132,7 +132,7 @@ def "tags lists all tags and only tags" [] {
         let recently = (date now) - 10sec
         assert ($tag.created > $recently)
 
-        assert ($tag.commit like '[0-9a-f]{40}')
+        assert ($tag.revision like '[0-9a-f]{40}')
     }
 }
 
@@ -209,7 +209,7 @@ def "work upsert reuses existing tracked worktree" [] {
     $remote | commit-file "file.nu" "print file"
     $remote | tag "v1.0.0"
     $clone | repo clone $remote
-    let revision = $clone | repo tags | first | get commit
+    let revision = $clone | repo tags | first | get revision
     let existing = $dir | path join "worktree" | repo work create $clone $revision
 
     let worktree = $existing | repo work upsert $clone $revision
@@ -227,7 +227,7 @@ def "work upsert fails if worktree directory already exists" [] {
     $remote | commit-file "file.nu" "print file"
     $remote | tag "v1.0.0"
     $clone | repo clone $remote
-    let revision = $clone | repo tags | first | get commit
+    let revision = $clone | repo tags | first | get revision
     let existing = $dir
     mkdir $existing
 
@@ -245,7 +245,7 @@ def "work upsert fails when creating duplicate worktree" [] {
     $remote | commit-file "file.nu" "print file"
     $remote | tag "v1.0.0"
     $clone | repo clone $remote
-    let revision = $clone | repo tags | first | get commit
+    let revision = $clone | repo tags | first | get revision
     let worktree1 = $dir | path join "worktree1" | repo work create $clone $revision
     let worktree2 = $dir | path join "worktree2"
 

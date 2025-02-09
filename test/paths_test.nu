@@ -77,7 +77,7 @@ def "revision-dir includes hash of host and path" [] {
     let pkg = {
         host: "example.com"
         path: "repo"
-        commit: "1234567890"
+        revision: "1234567890"
     }
 
     with-env { XDG_DATA_HOME: $in.temp } {
