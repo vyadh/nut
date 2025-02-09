@@ -25,7 +25,7 @@ export def "has dependency" [package: record<host: string, path: string, fragmen
         | values # We're not concerned about the category of dependency
         | columns
 
-    let id = $package | package id
+    let id = $package | package to id
     $id in $all_dependencies
 }
 
@@ -38,8 +38,9 @@ export def "add dependency" [
     let dependencies = $project | child dependencies
     let existing_dependencies = $dependencies | child $category
     let dependency = {
-        ($package | package id): {
-            version: $package.version, revision: $package.revision
+        ($package | package to id): {
+            version: $package.version
+            revision: $package.revision
         }
     }
 

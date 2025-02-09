@@ -3,13 +3,14 @@
 # TODO It is here to explore what is required from the supporting modules.
 
 # Needed operations:
-# - 🚧 ☑️ add a package to the project
+# - ☑️ add a package to the project
 # - remove a package from the project
 # - upgrade a package in the project to latest of available clone data
 # - upgrade all packages in the project to latest of available clone data
 # - change project file, update lock file from this project metadata (update?)
 # - "apt update" for all packages in the project (no changes?)
 # - is the update + upgrade split necessary? Maybe we just need to have an --offline option?
+# - 🚧 add required overlays
 
 use paths.nu
 use package.nu
@@ -18,8 +19,9 @@ use repo.nu
 use versions.nu
 
 export def activate [] {
-    # todo needs to close and worktree if not already
+    # todo needs to clone repo and create worktree if not already
 
+    let project = project read
 }
 
 # Add the package to the current project.
@@ -32,7 +34,11 @@ export def add-package [
     --version: string  # The version of the package to add, or latest if not specified
 ]: nothing -> nothing {
 
-    let pkg = $package | package resolve $type $version
+    let pkg = $package
+        | package from id
+        | insert type $type
+        | insert version $version
+
     let clone_dir = $pkg | paths clone-dir
 
     let project = project read

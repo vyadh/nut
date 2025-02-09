@@ -1,16 +1,23 @@
 
-# Resolve package information to a canonical form.
-export def resolve [
-    type: string, version?: string
-]: string -> record<scheme: string, host: string, path: string, fragment: string, type: string, version: string> {
-    let url = $in | url parse | validate
+const default_prefix = "https://"
 
-    $url
+export def "from id" []: string -> record<host: string, path: string, fragment: string> {
+    $in
+        | with-scheme
+        | url parse
+        | validate
         | select scheme host path fragment
         | update host { |it| $it.host | str downcase }
         | update path { |it| $it.path | str replace --regex '\.git$' '' }
-        | insert type $type
-        | insert version $version
+}
+
+def with-scheme []: string -> string {
+    let id = $in
+    if not ($id like "[a-z]+://.+") {
+        $"($default_prefix)($id)"
+    } else {
+        $id
+    }
 }
 
 def validate []: record -> record {
@@ -30,7 +37,7 @@ def validate []: record -> record {
     $url
 }
 
-export def id []: record<host: string, path: string, fragment: string> -> string {
+export def "to id" []: record<host: string, path: string, fragment: string> -> string {
     let pkg = $in
     if ($pkg.fragment | is-empty) {
         $"($pkg.host)($pkg.path)"
