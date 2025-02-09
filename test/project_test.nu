@@ -105,12 +105,16 @@ def "add dependency to empty project" [] {
         path: "/example/project"
         fragment: "component"
         version: "1.1.0"
+        revision: "abcdef"
     }
 
     assert equal $result {
         dependencies: {
             runtime: {
-                "github.com/example/project#component": { version: "1.1.0" }
+                "github.com/example/project#component": {
+                    version: "1.1.0"
+                    revision: "abcdef"
+                }
             }
         }
     }
@@ -122,10 +126,16 @@ def "add dependency to existing project" [] {
         license: "MIT"
         dependencies: {
             runtime: {
-                "github.com/example/project": { version: "0.1.0" }
+                "github.com/example/project": {
+                    version: "0.1.0"
+                    revision: "01"
+                }
             }
             development: {
-                "github.com/example/nutest": { version: "1.0.0" }
+                "github.com/example/nutest": {
+                    version: "1.0.0"
+                    revision: "02"
+                }
             }
         }
     }
@@ -135,17 +145,27 @@ def "add dependency to existing project" [] {
         path: "/awesome/project"
         fragment: ""
         version: "1.1.0"
+        revision: "0123456789"
     }
 
     assert equal $result {
         license: "MIT"
         dependencies: {
             runtime: {
-                "github.com/example/project": { version: "0.1.0" }
-                "gitlab.com/awesome/project": { version: "1.1.0" }
+                "github.com/example/project": {
+                    version: "0.1.0"
+                    revision: "01"
+                 }
+                "gitlab.com/awesome/project": {
+                    version: "1.1.0"
+                    revision: "0123456789"
+                }
             }
             development: {
-                "github.com/example/nutest": { version: "1.0.0" }
+                "github.com/example/nutest": {
+                    version: "1.0.0"
+                    revision: "02"
+                }
             }
         }
     }

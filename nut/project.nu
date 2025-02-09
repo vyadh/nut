@@ -37,7 +37,11 @@ export def "add dependency" [
     let project = $in
     let dependencies = $project | child dependencies
     let existing_dependencies = $dependencies | child $category
-    let dependency = { ($package | package id): { version: $package.version } }
+    let dependency = {
+        ($package | package id): {
+            version: $package.version, revision: $package.revision
+        }
+    }
 
     {
         ...($project | reject --ignore-errors dependencies)
