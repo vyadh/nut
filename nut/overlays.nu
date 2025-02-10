@@ -28,8 +28,8 @@ def collate []: record -> table<name: string, module: string> {
     $project
         | dependencies
         | insert pkg { $in.id | package from id }
-        | insert name { $in.pkg.path | to name }
-        | insert module { to module $in.name } # todo detect conflict
+        | insert name { to name }
+        | insert module { to module }
         | select name module
 }
 
@@ -40,7 +40,7 @@ def dependencies []: record -> table<id: string, revision: string> {
         | flatten
         | transpose id data
         | insert revision { $in.data.revision }
-        | reject data
+        | select id revision
 }
 
 def child [name: string]: record -> record {
@@ -48,14 +48,34 @@ def child [name: string]: record -> record {
     $node | get --ignore-errors $name | default { }
 }
 
-def "to name" []: string -> string {
-    # todo ever be empty?
-    # todo what about when it's a file?
-    let path = $in
-    $path | path basename
+# todo detect conflicts
+# todo path ever be empty?
+# todo need to escape this, or do we already validate with regex?
+def "to name" []: record<pkg: record> -> string {
+    let pkg = $in.pkg
+    let basename = $pkg.path | path basename
+
+    if ($pkg.fragment | is-not-empty) {
+        # some/path/module.nu -> module
+        $pkg.fragment | path basename | path parse | get stem
+    } else {
+        $basename
+    }
 }
 
-def "to module" [name: string]: record<pkg: record, revision: string> -> string {
-    let path = { ...$in.pkg, revision: $in.revision } | paths revision-dir
-    $"($path)/($name)"
+# todo detect conflicts
+# todo path ever be empty?
+# todo need to escape this, or do we already validate with regex?
+def "to module" []: record<pkg: record, revision: string> -> string {
+    let pkg = $in.pkg
+    let revision = $in.revision
+    let basename = $pkg.path | path basename
+    let repo_path = { ...$pkg, revision: $revision } | paths revision-dir
+
+    if ($pkg.fragment | is-not-empty) {
+        # `overlay use` will name as file without extension
+        $"($repo_path)/($pkg.fragment)"
+    } else {
+        $"($repo_path)/($basename)"
+    }
 }

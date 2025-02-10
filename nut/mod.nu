@@ -4,13 +4,16 @@
 
 # Needed operations:
 # - ☑️ add a package to the project
+# - ☑️ add required overlays
+# - ☑️ support sub-modules
+# - 🚧 support scripts
+#
 # - remove a package from the project
 # - upgrade a package in the project to latest of available clone data
 # - upgrade all packages in the project to latest of available clone data
 # - change project file, update lock file from this project metadata (update?)
 # - "apt update" for all packages in the project (no changes?)
 # - is the update + upgrade split necessary? Maybe we just need to have an --offline option?
-# - 🚧 add required overlays
 
 use overlays.nu
 use paths.nu
@@ -21,6 +24,7 @@ use versions.nu
 
 export def activate [] {
     # todo needs to clone repo and create worktree if not already
+    # todo should not be able to add sub-module of a package if it exists
     project read | overlays set-active
 }
 
@@ -72,16 +76,18 @@ export def add-package [
     let worktree = $pkg
         | paths revision-dir
         | repo work upsert $clone_dir $pkg.revision
-    print $worktree
+    #print $worktree
 
     $project
         | project add dependency $category $pkg
         | project write
 
-    # todo if project activated, use as an overlay
+    # todo if project activated, print message that shell needs to be-reactivated
 
     ignore
 }
+
+# todo support remove
 
 # Update package information being currently tracked. If no package is specified,
 # update information for all packages in the project.

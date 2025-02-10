@@ -64,12 +64,18 @@ We need to pay attention on how to support both absolute and relative paths, as 
 In addition, we should support the ability to specify a sub-path within the repository. This is useful for monorepos, where a single repository contains multiple packages. Given a Nushell repository is often likely to be a collection of small modules, a package manager requires first-class support for this kind of project organisation.
 
 ```
-github.com/vyadh/nut#semver
+github.com/org/project#some/module
 ```
 
 This leverages the "fragment" part of the URI spec to reference a `semver` module within the `nut` repository. This makes it clear to the package manager that it should clone the Git repository and then look for the `semver` module within it.
 
 This also allows a single id field to reference both a repository-level module in the same way as a submodule several levels deep.
+
+Additionally, single files can be referenced as modules in the same way:
+
+```
+github.com/org/project#some/path/module.nu
+```
 
 
 ### OCI Registry

@@ -55,3 +55,26 @@ def "collate when dependencies present" [] {
         assert (($result | get 1.module) like "/_org_project2-[0-9a-f]{32}/4321/project2$")
     }
 }
+
+# [test]
+def "collate dependency with fragment on module file" [] {
+    let temp = $in.temp
+
+    let project = {
+        dependencies: {
+            runtime: {
+                "github.com/org/project#module/component.nu": {
+                    version: "1.0.1"
+                    revision: "1001"
+                }
+            }
+        }
+    }
+
+    with-env { XDG_DATA_HOME: $temp } {
+        let result = $project | collate
+
+        assert equal ($result | get 0.name) "component"
+        assert (($result | get 0.module) like "/_org_project-[0-9a-f]{32}/1001/module/component.nu$")
+    }
+}
