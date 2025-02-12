@@ -5,37 +5,37 @@ In a distributed package system, a reference to a package needs to be globally u
 
 # Unique Identifier
 
-The package `name` is the same as many package management tools would represent the `name` of the package. In a distributed system, this `name` would need to be a globally-unique reference. Since the package is sourced from this identifier, there is no ambiguity between this and other packages, and only the owner of this repository would be able to publish packages.
+Package management tools have a `name` to represent the package. In a distributed system, this name would need to be a globally-unique reference. Since the package is sourced from this identifier, there is no ambiguity between this and other packages, and only the owner of this repository would be able to publish packages.
 
 With a unique identifier, typo-squatting attacks become more obvious. For example, a package being installed from `nushell/nupm` rather than `attacker/nupm`. Contrast this with `npm install bable` or `pip install reqests` where the typos in both places are easy to miss.
 
-Given this kind of package id is longer than a package name in a system that has a registry, that at least has the benefit as it's less likely to be typed wrongly and more likely copy/pasted. There is also the issue with a typo in the provider `github.com/microsoft/azure-cli` versus `github.com/microsft/azure-cli` but at the same time, such blatant organisation name squatting on providers like GitHub seems less likely than for any particular package.
+A package `id` is longer than a package name with an implicit registry. This has a side benefit that it's less likely to be typed wrongly and more likely copy/pasted. There is also the issue with a typo in the provider `github.com/microsoft/azure-cli` versus `github.com/microsft/azure-cli` but at the same time, such blatant organisation name squatting on providers like GitHub seems less likely than for any particular package.
 
-If a repository is renamed or moved withing a Git hosting provider, an HTTP redirect is usually performed. This means that the `id` can be considered stable even if the repository is moved. However, we should emit a warning for usages to update.
+If a repository is renamed or moved within a Git hosting provider, an HTTP redirect is usually performed. This means that the `id` can be considered stable even if the repository is moved. However, we should emit a warning for usages to update.
 
-It isn't ideal to have a package id that is a direct location of a package, but the simplicity benefits outweigh the downsides, and Nut is far from the only package manager to take this approach.
+While it isn't ideal to have a package id that is a direct location of a package, the simplicity benefits of the whole system would seem to outweigh the downsides, and Nut is far from the only package manager to take this approach.
 
 
 ## Required Information
 
-For our purposes, we would want to encode the following information:
+In Nut the following information is required:
 - The name of the package to both uniquely identify and locate it.
 - The context within the package that should be used.
 
 
 ## URIs
 
-Nut could have used a URI to classify packages as it's a convenient and standard unique identifier for the package. However, it's longer than really necessary and it begs the question of what would be the scheme.
+Nut could have used a URI to classify packages as it's a convenient and standard unique identifier for the package. However, it's longer than really necessary. It also begs the question of what would be the scheme.
 
-Exploring that, tye disadvantages to using a URI are:
 - Using `nut://` on every package is redundant.
 - Adding something for our different types of packages would be useful, but that would suggest something like `git://` but this might imply Nut uses Git's unsecured protocol, so it's best to avoid the confusion.
-- Users may assume the URIs we specify are also URLs, which is not necessarily the case. The mechanism to retrieve the package may depend on the type of module for example.
+
+Users may also assume the URIs we specify are also URLs, which is not necessarily the case. The mechanism to retrieve the package may depend on the type of module for example.
 
 
 ## Id
 
-Nut uses `https://<domain>/<path>` as it's short enough and used by other package managers like Go and Docker so it would likely be more familiar.
+Nut uses the format `<domain>/<path>` as it's as short as possibly to capture the above information. This implicitly has an `https` scheme.
 
 A package manager should not allow the ability to specify user information or port as part of our URI as they are no part of the unique name and a security risk. These should be configured elsewhere.
 
@@ -45,6 +45,8 @@ A package manager should not allow the ability to specify user information or po
 A package manager for Nushell should support scripts, modules and plugins. While scripts and modules can be stored in a Git repository, plugins are compiled binaries and should be stored in a binary repository. In each case, we should support industry standards.
 
 It seems better these are specified separately from the name, though we'll need to think about whether it is valid to have two packages with the same name but different types. This is likely to be a rare and for now we'll assume it's not allowed.
+
+By default, a package is assumed to be a module.
 
 
 ### Local "Remotes"
@@ -57,17 +59,18 @@ This can simply be indicated a non-domain format of the name, indicating it's a 
 file:///home/user/path/to/package
 ```
 
-We need to pay attention on how to support both absolute and relative paths, as well it as it being able to work on both Unixy-style and Windows filesystems.
+We need to pay attention on how to support both absolute and relative paths, as well as it being able to work on both Unixy-style and Windows filesystems.
 
 ### Monorepos
 
-In addition, we should support the ability to specify a sub-path within the repository. This is useful for monorepos, where a single repository contains multiple packages. Given a Nushell repository is often likely to be a collection of small modules, a package manager requires first-class support for this kind of project organisation.
+In addition, we should support the ability to specify a sub-path within the repository. This is useful for monorepos, where a single repository contains multiple packages. Given a Nushell repository is likely to be a collection of small modules, a package manager requires first-class support for this kind of project organisation.
 
+For example:
 ```
 github.com/org/project#some/module
 ```
 
-This leverages the "fragment" part of the URI spec to reference a `semver` module within the `nut` repository. This makes it clear to the package manager that it should clone the Git repository and then look for the `semver` module within it.
+This leverages the "fragment" part of the URI spec to reference a `module` module within the `nut` repository. This makes it clear to the package manager that it should clone the Git repository and then look for the `some/module` module within it.
 
 This also allows a single id field to reference both a repository-level module in the same way as a submodule several levels deep.
 
