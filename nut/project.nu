@@ -56,6 +56,27 @@ export def "add dependency" [
     }
 }
 
+export def "remove dependency" [
+    package: record<host: string, path: string, fragment: string>
+]: record -> record {
+
+    let project = $in
+    let dependencies = $project | child dependencies
+    let id = $package | package to id
+
+    {
+        ...($project | reject --ignore-errors dependencies)
+        dependencies: {
+            runtime: {
+                ...($dependencies | child runtime | reject --ignore-errors $id)
+            }
+            development: {
+                ...($dependencies | child development | reject --ignore-errors $id)
+            }
+        }
+    }
+}
+
 def child [name: string]: record -> record {
     let node = $in
     $node | get --ignore-errors $name | default { }

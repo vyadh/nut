@@ -1,4 +1,5 @@
 use std assert
+use errors.nu catch-error
 use ../nut/package.nu
 use ../nut/project.nu
 
@@ -33,6 +34,33 @@ def "read contents of project file" [] {
     let result = project read
 
     assert equal $result { license: "MIT" }
+}
+
+# [test]
+def "write project file with content" [] {
+    cd $in.dir
+    let data = {
+        license: "MIT"
+    }
+
+    let result = $data | project write
+
+    assert equal $result $data
+    assert equal (open "nut.nuon") { license: "MIT" }
+}
+
+# [test]
+def "write project overwrites previous" [] {
+    cd $in.dir
+    "{}" | save "nut.nuon"
+    let data = {
+        license: "MIT"
+    }
+
+    let result = $data | project write
+
+    assert equal $result $data
+    assert equal (open "nut.nuon") { license: "MIT" }
 }
 
 # [test]
@@ -99,7 +127,7 @@ def "has dependency searches across categories" [] {
 }
 
 # [test]
-def "add dependency to empty project" [] {
+def "add dependency with fragment to empty project" [] {
     let result = { } | project add dependency "runtime" {
         host: "github.com"
         path: "/example/project"
@@ -172,30 +200,67 @@ def "add dependency to existing project" [] {
 }
 
 # [test]
-def "write project file with content" [] {
-    cd $in.dir
-    let data = {
-        license: "MIT"
+def "remove package that was not added" [] {
+    let project = { }
+    let pkg = {
+        host: "github.com"
+        path: "/example/project"
+        fragment: ""
     }
 
-    let result = $data | project write
+    let result = $project | project remove dependency $pkg
 
-    assert equal $result $data
-    assert equal (open "nut.nuon") { license: "MIT" }
+    assert equal $result {
+        dependencies: {
+            runtime: { }
+            development: { }
+        }
+    }
 }
 
 # [test]
-def "write project overwrites previous" [] {
-    cd $in.dir
-    "{}" | save "nut.nuon"
-    let data = {
-        license: "MIT"
+def "remove package that was previously added" [] {
+    let project = {
+        dependencies: {
+            runtime: {
+                "github.com/example/project": {
+                    version: "0.1.0"
+                    revision: "01"
+                }
+                "github.com/example/project2": {
+                    version: "0.1.0"
+                    revision: "01"
+                }
+            }
+            development: {
+                "github.com/example/project": {
+                    version: "1.0.0"
+                    revision: "02"
+                }
+            }
+        }
     }
 
-    let result = $data | project write
+    let pkg = {
+        host: "github.com"
+        path: "/example/project"
+        fragment: ""
+    }
 
-    assert equal $result $data
-    assert equal (open "nut.nuon") { license: "MIT" }
+    let result = $project | project remove dependency $pkg
+    #}
+
+    assert equal $result {
+        dependencies: {
+            runtime: {
+                "github.com/example/project2": {
+                    version: "0.1.0"
+                    revision: "01"
+                }
+            }
+            development: { }
+        }
+    }
 }
 
 def pkg []: string -> record<host: string, path: string, fragment: string> {

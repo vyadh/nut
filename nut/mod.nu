@@ -6,9 +6,9 @@
 # - ☑️ add a package to the project
 # - ☑️ add required overlays
 # - ☑️ support sub-modules
+# - ☑️ remove a package from the project
 # - 🚧 support scripts
 #
-# - remove a package from the project
 # - upgrade a package in the project to latest of available clone data
 # - upgrade all packages in the project to latest of available clone data
 # - change project file, update lock file from this project metadata (update?)
@@ -47,7 +47,7 @@ export def add-package [
 
     let project = project read
     if ($project | project has dependency $pkg) {
-        error make { msg: $"Package already exists in the project: ($package)" }
+        error make { msg: $"Package already exists in project: ($package)" }
     }
 
     $clone_dir | repo clone $package
@@ -87,20 +87,29 @@ export def add-package [
     ignore
 }
 
-# todo support remove
+export def remove-package [
+    package: string
+]: nothing -> nothing {
+
+    let pkg = $package | package from id
+
+    let project = project read
+    if not ($project | project has dependency $pkg) {
+        error make { msg: $"Package doesn't exist in project: ($package)" }
+    }
+
+    $project
+        | project remove dependency $pkg
+        | project write
+
+    ignore
+}
 
 # Update package information being currently tracked. If no package is specified,
 # update information for all packages in the project.
 export def update-package [
     package?: string # The package reference
-]: nothing -> nothing {
-}
-
-# Upgrade a package to the latest version. If no package is specified, upgrade all
-# packages.
-export def upgrade-package [
-    package?: string # The package reference
-    --update         # By default work offline, but with this flag the package sources are updated.
+    --offline        # Update package(s) from the local clone, not the remote source.
 ]: nothing -> nothing {
 }
 
