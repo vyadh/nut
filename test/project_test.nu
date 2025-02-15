@@ -245,14 +245,11 @@ def "remove package that was not added" [] {
         fragment: ""
     }
 
-    let result = $project | project remove dependency $pkg
-
-    assert equal $result {
-        dependencies: {
-            runtime: { }
-            development: { }
-        }
+    let error = catch-error {
+        $project | project remove dependency $pkg
     }
+
+    assert equal $error "Package doesn't exist in project: github.com/example/project"
 }
 
 # [test]
@@ -295,7 +292,6 @@ def "remove package that was previously added" [] {
                     revision: "01"
                 }
             }
-            development: { }
         }
     }
 }

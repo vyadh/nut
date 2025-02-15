@@ -71,14 +71,16 @@ export def "remove dependency" [
     let dependencies = $project | child dependencies
     let id = $package | package to id
 
+    let category = $project | find category $package
+    if $category == null {
+        error make { msg: $"Package doesn't exist in project: ($id)" }
+    }
+
     {
         ...($project | reject --ignore-errors dependencies)
         dependencies: {
-            runtime: {
-                ...($dependencies | child runtime | reject --ignore-errors $id)
-            }
-            development: {
-                ...($dependencies | child development | reject --ignore-errors $id)
+            $category: {
+                ...($dependencies | child $category | reject --ignore-errors $id)
             }
         }
     }
