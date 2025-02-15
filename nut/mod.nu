@@ -7,9 +7,8 @@
 # - ☑️ add required overlays
 # - ☑️ support sub-modules
 # - ☑️ remove a package from the project
+# - ☑️ upgrade a package in the project to latest of available clone data
 # - 🚧 support scripts
-#
-# - upgrade a package in the project to latest of available clone data
 # - upgrade all packages in the project to latest of available clone data
 # - change project file, update lock file from this project metadata (update?)
 # - "apt update" for all packages in the project (no changes?)
@@ -108,9 +107,56 @@ export def remove-package [
 # Update package information being currently tracked. If no package is specified,
 # update information for all packages in the project.
 export def update-package [
-    package?: string # The package reference
+    package: string # The package reference
+    --version: string  # The version of the package to add, or latest if not specified
     --offline        # Update package(s) from the local clone, not the remote source.
 ]: nothing -> nothing {
+
+    # todo update all when package null
+    let pkg = $package | package from id
+    let clone_dir = $pkg | paths clone-dir
+
+    let project = project read
+    let category = $project | project find category $pkg
+    if $category == null {
+        error make { msg: $"Package doesn't exist in project: ($package)" }
+    }
+
+    $clone_dir | repo clone $package
+    # todo we don't need to update if we just cloned fresh
+    $clone_dir | repo update
+
+    let versions = $clone_dir
+        | repo tags
+        | select tag revision
+        | versions resolved
+    print $versions
+
+    let tag = if $version == null {
+        $versions | versions latest
+    } else {
+        $versions | versions locate $version
+    }
+
+    let pkg = $pkg
+        | insert ref $tag.tag
+        | insert version $tag.version
+        | insert revision $tag.revision
+    print $pkg
+
+    let worktree = $pkg
+        | paths revision-dir
+        | repo work upsert $clone_dir $pkg.revision
+    #print $worktree
+
+    $project
+        | project remove dependency $pkg
+        | project add dependency $category $pkg
+        | project write
+
+    # todo if project activated, print message that shell needs to be-reactivated
+
+    ignore
 }
 
 # todo list versions in a table, which is reverse semver sorted

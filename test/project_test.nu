@@ -64,12 +64,49 @@ def "write project overwrites previous" [] {
 }
 
 # [test]
-def "has dependency false when project file missing" [] {
+def "find category when project file missing" [] {
     cd $in.dir
 
-    let result = { } | project has dependency ("github.com/example/project" | pkg)
+    let result = { } | project find category ("github.com/example/project" | pkg)
 
-    assert equal $result false
+    assert equal $result null
+}
+
+# [test]
+def "find category when in a single category" [] {
+    cd $in.dir
+    let data = {
+        dependencies: {
+            runtime: {
+                "github.com/example/util": { version: "0.1.0" }
+            }
+            development: {
+                "github.com/example/test": { version: "0.1.0" }
+            }
+        }
+    }
+    $data | save "nut.nuon"
+
+    assert equal ($data | project find category ("github.com/example/util" | pkg)) "runtime"
+    assert equal ($data | project find category ("github.com/example/test" | pkg)) "development"
+}
+
+# [test]
+def "find category when in a multiple categories prefers runtime" [] {
+    cd $in.dir
+    let data = {
+        dependencies: {
+            development: {
+                "github.com/example/project": { version: "0.1.0" }
+            }
+            runtime: {
+                "github.com/example/project": { version: "0.1.0" }
+            }
+        }
+    }
+    $data | save "nut.nuon"
+
+    assert equal ($data | project find category ("github.com/example/project" | pkg)) "runtime"
 }
 
 # [test]

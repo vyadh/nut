@@ -17,16 +17,23 @@ export def write []: record -> record {
     $project
 }
 
-export def "has dependency" [package: record<host: string, path: string, fragment: string>]: record -> bool {
+export def "find category" [package: record<host: string, path: string, fragment: string>]: record -> any {
     let project = $in
-
-    let all_dependencies = $project
-        | child dependencies
-        | values # We're not concerned about the category of dependency
-        | columns
-
     let id = $package | package to id
-    $id in $all_dependencies
+
+    for category in ["runtime", "development"] {
+        let dependencies = $project | child dependencies
+        let dependency = $dependencies | child $category | get --ignore-errors $id
+        if $dependency != null {
+            return $category
+        }
+    }
+
+    null
+}
+
+export def "has dependency" [package: record<host: string, path: string, fragment: string>]: record -> bool {
+    ($in | find category $package) != null
 }
 
 export def "add dependency" [
