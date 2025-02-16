@@ -64,108 +64,66 @@ def "write project overwrites previous" [] {
 }
 
 # [test]
-def "find category when project file missing" [] {
+def "find dependency when project file missing" [] {
     cd $in.dir
 
-    let result = { } | project find category ("github.com/example/project" | pkg)
+    let result = { } | project find dependency ("github.com/example/project" | pkg)
 
     assert equal $result null
 }
 
 # [test]
-def "find category when in a single category" [] {
+def "find dependency when exists" [] {
     cd $in.dir
     let data = {
         dependencies: {
             runtime: {
-                "github.com/example/util": { version: "0.1.0" }
+                "github.com/example/one": { version: "0.1.0", revision: "01" }
             }
             development: {
-                "github.com/example/test": { version: "0.1.0" }
+                "github.com/example/two": { version: "0.2.0", revision: "02" }
             }
         }
     }
     $data | save "nut.nuon"
 
-    assert equal ($data | project find category ("github.com/example/util" | pkg)) "runtime"
-    assert equal ($data | project find category ("github.com/example/test" | pkg)) "development"
-}
-
-# [test]
-def "find category when in a multiple categories prefers runtime" [] {
-    cd $in.dir
-    let data = {
-        dependencies: {
-            development: {
-                "github.com/example/project": { version: "0.1.0" }
-            }
-            runtime: {
-                "github.com/example/project": { version: "0.1.0" }
-            }
-        }
+    assert equal ($data | project find dependency ("github.com/example/one" | pkg)) {
+        id: "github.com/example/one"
+        category: "runtime"
+        version: "0.1.0"
+        revision: "01"
     }
-    $data | save "nut.nuon"
 
-    assert equal ($data | project find category ("github.com/example/project" | pkg)) "runtime"
+    assert equal ($data | project find dependency ("github.com/example/two" | pkg)) {
+        id: "github.com/example/two"
+        category: "development"
+        version: "0.2.0"
+        revision: "02"
+    }
 }
 
 # [test]
-def "has dependency reflects its presence" [] {
+def "find dependency respects fragment" [] {
     cd $in.dir
     let data = {
         dependencies: {
             runtime: {
-                "github.com/example/present": { version: "0.1.0" }
+                "github.com/example/first#component": { version: "0.1.0", revision: "1" }
+                "github.com/example/second": { version: "0.1.0", revision: "1" }
             }
         }
     }
     $data | save "nut.nuon"
 
-    assert equal ($data | project has dependency ("github.com/example/present" | pkg)) true
-    assert equal ($data | project has dependency ("github.com/example/missing" | pkg)) false
+    assert (($data | project find dependency ("github.com/example/first" | pkg)) == null)
+    assert (($data | project find dependency ("github.com/example/first#component" | pkg)) != null)
+    assert (($data | project find dependency ("github.com/example/second" | pkg)) != null)
+    assert (($data | project find dependency ("github.com/example/present#component" | pkg)) == null)
 }
 
 # [test]
-def "has dependency respects fragment" [] {
-    cd $in.dir
-    let data = {
-        dependencies: {
-            runtime: {
-                "github.com/example/first#component": { version: "0.1.0" }
-                "github.com/example/second": { version: "0.1.0" }
-            }
-        }
-    }
-    $data | save "nut.nuon"
-
-    assert equal ($data | project has dependency ("github.com/example/first" | pkg)) false
-    assert equal ($data | project has dependency ("github.com/example/first#component" | pkg)) true
-    assert equal ($data | project has dependency ("github.com/example/second" | pkg)) true
-    assert equal ($data | project has dependency ("github.com/example/present#component" | pkg)) false
-}
-
-# [test]
-def "has dependency searches across categories" [] {
-    cd $in.dir
-    let data = {
-        dependencies: {
-            runtime: {
-                "github.com/example/runtime": { version: "0.1.0" }
-            }
-            development: {
-                "github.com/example/dev": { version: "0.1.0" }
-            }
-        }
-    }
-    $data | save "nut.nuon"
-
-    assert equal ($data | project has dependency ("github.com/example/runtime" | pkg)) true
-    assert equal ($data | project has dependency ("github.com/example/dev" | pkg)) true
-}
-
-# [test]
-def "add dependency with fragment to empty project" [] {
-    let result = { } | project add dependency "runtime" {
+def "upsert dependency with fragment to empty project" [] {
+    let result = { } | project upsert dependency "runtime" {
         host: "github.com"
         path: "/example/project"
         fragment: "component"
@@ -186,7 +144,7 @@ def "add dependency with fragment to empty project" [] {
 }
 
 # [test]
-def "add dependency to existing project" [] {
+def "upsert dependency to existing project" [] {
     let project = {
         license: "MIT"
         dependencies: {
@@ -205,7 +163,7 @@ def "add dependency to existing project" [] {
         }
     }
 
-    let result = $project | project add dependency "runtime" {
+    let result = $project | project upsert dependency "runtime" {
         host: "gitlab.com"
         path: "/awesome/project"
         fragment: ""
@@ -231,6 +189,41 @@ def "add dependency to existing project" [] {
                     version: "1.0.0"
                     revision: "02"
                 }
+            }
+        }
+    }
+}
+
+# [test]
+def "upsert existing dependency" [] {
+    let project = {
+        license: "MIT"
+        dependencies: {
+            runtime: {
+                "github.com/example/project": {
+                    version: "0.1.0"
+                    revision: "01"
+                }
+            }
+        }
+    }
+
+    let result = $project | project upsert dependency "runtime" {
+        host: "github.com"
+        path: "/example/project"
+        fragment: ""
+        version: "0.2.0"
+        revision: "02"
+    }
+
+    assert equal $result {
+        license: "MIT"
+        dependencies: {
+            runtime: {
+                "github.com/example/project": {
+                    version: "0.2.0"
+                    revision: "02"
+                 }
             }
         }
     }

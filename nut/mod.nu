@@ -32,63 +32,26 @@ export def activate [] {
 # been added to a project on the system where the full id can be tab-completed.
 export def add-package [
     package: string    # The package reference URL, which could be local or remote
-    --type: string = "module" # The type of the package, currently only module is supported
+    --type: string = "module" # The type of the package, currently only module is supported todo
     --category: string = "runtime" # The category of dependency, either runtime or development
     --version: string  # The version of the package to add, or latest if not specified
-]: nothing -> nothing {
+] {
 
-    let pkg = $package
-        | package from id
-        | insert type $type
-        | insert version $version
-
-    let clone_dir = $pkg | paths clone-dir
-
+    let pkg = $package | package from id
     let project = project read
-    if ($project | project has dependency $pkg) {
+    let existing = $project | project find dependency $pkg
+    if $existing != null {
         error make { msg: $"Package already exists in project: ($package)" }
     }
 
-    $clone_dir | repo clone $package
-    # todo we don't need to update if we just cloned fresh
-    $clone_dir | repo update
-
-    let versions = $clone_dir
-        | repo tags
-        | select tag revision
-        | versions resolved
-    print $versions
-
-    let tag = if $version == null {
-        $versions | versions latest
-    } else {
-        $versions | versions locate $version
-    }
-
-    let pkg = $pkg
-        | insert ref $tag.tag
-        | reject version # Use normalised semver-compatible version from the tag (todo: or remove adding above?)
-        | insert version $tag.version
-        | insert revision $tag.revision
-    print $pkg
-
-    let worktree = $pkg
-        | paths revision-dir
-        | repo work upsert $clone_dir $pkg.revision
-    #print $worktree
-
-    $project
-        | project add dependency $category $pkg
-        | project write
+    $project | upsert-package $package $pkg $category --version $version
 
     # todo if project activated, print message that shell needs to be-reactivated
 
     ignore
 }
 
-export def remove-package [
-    package: string
-]: nothing -> nothing {
+export def remove-package [ package: string ] {
 
     let pkg = $package | package from id
 
@@ -109,20 +72,32 @@ export def remove-package [
 export def update-package [
     package: string # The package reference
     --version: string  # The version of the package to add, or latest if not specified
-    --offline        # Update package(s) from the local clone, not the remote source.
-]: nothing -> nothing {
+    --offline        # Update package(s) from the local clone, not the remote source. todo
+] {
 
     # todo update all when package null
-    let pkg = $package | package from id
-    let clone_dir = $pkg | paths clone-dir
 
+    let pkg = $package | package from id
     let project = project read
-    let category = $project | project find category $pkg
-    if $category == null {
+    let existing = $project | project find dependency $pkg
+    if $existing == null {
         error make { msg: $"Package doesn't exist in project: ($package)" }
     }
 
-    $clone_dir | repo clone $package
+    $project | upsert-package $package $pkg $existing.category --version $version
+}
+
+def upsert-package [
+    id: string
+    pkg: record<host: string, path: string, fragment: string>
+    category: string
+    --version: string
+]: record -> nothing {
+
+    let project = $in
+
+    let clone_dir = $pkg | paths clone-dir
+    $clone_dir | repo clone $id
     # todo we don't need to update if we just cloned fresh
     $clone_dir | repo update
 
@@ -150,13 +125,13 @@ export def update-package [
     #print $worktree
 
     $project
-        | project remove dependency $pkg
-        | project add dependency $category $pkg
+        | project upsert dependency $category $pkg
         | project write
 
     # todo if project activated, print message that shell needs to be-reactivated
 
     ignore
 }
+
 
 # todo list versions in a table, which is reverse semver sorted

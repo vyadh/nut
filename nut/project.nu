@@ -17,46 +17,51 @@ export def write []: record -> record {
     $project
 }
 
-export def "find category" [package: record<host: string, path: string, fragment: string>]: record -> any {
+export def "find dependency" [package: record<host: string, path: string, fragment: string>]: record -> any {
     let project = $in
     let id = $package | package to id
+    let dependencies = $project | child dependencies
 
-    for category in ["runtime", "development"] {
-        let dependencies = $project | child dependencies
+    for category in ($dependencies | columns) {
         let dependency = $dependencies | child $category | get --ignore-errors $id
         if $dependency != null {
-            return $category
+            return {
+                id: $id
+                category: $category
+                version: $dependency.version
+                revision: $dependency.revision
+            }
         }
     }
 
     null
 }
 
-export def "has dependency" [package: record<host: string, path: string, fragment: string>]: record -> bool {
-    ($in | find category $package) != null
-}
-
-export def "add dependency" [
+export def "upsert dependency" [
     category: string
     package: record<host: string, path: string, fragment: string, version: string>
 ]: record -> record {
 
     let project = $in
+    let id = $package | package to id
     let dependencies = $project | child dependencies
-    let existing_dependencies = $dependencies | child $category
+    let other_categories = $dependencies | reject --ignore-errors $category
+    let other_dependencies = $dependencies | child $category | reject --ignore-errors $id
+    let other_project_data = $project | reject --ignore-errors dependencies
+
     let dependency = {
-        ($package | package to id): {
+        $id: {
             version: $package.version
             revision: $package.revision
         }
     }
 
     {
-        ...($project | reject --ignore-errors dependencies)
+        ...$other_project_data
         dependencies: {
-            ...($dependencies | reject --ignore-errors $category)
+            ...$other_categories
             $category: {
-                ...$existing_dependencies
+                ...$other_dependencies
                 ...$dependency
             }
         }
@@ -68,13 +73,14 @@ export def "remove dependency" [
 ]: record -> record {
 
     let project = $in
-    let dependencies = $project | child dependencies
     let id = $package | package to id
-
-    let category = $project | find category $package
-    if $category == null {
+    let dependencies = $project | child dependencies
+    let existing = $project | find dependency $package
+    if $existing == null {
         error make { msg: $"Package doesn't exist in project: ($id)" }
     }
+
+    let category = $existing.category
 
     {
         ...($project | reject --ignore-errors dependencies)
