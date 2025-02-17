@@ -17,24 +17,39 @@ export def write []: record -> record {
     $project
 }
 
+export def "find dependencies" []: record -> list<record<id: string, category: string, version: string, revision: string>> {
+    let project = $in
+    let dependencies = $project | child dependencies
+
+    $dependencies
+        | columns
+        | each { |category_name|
+            $dependencies
+                | child $category_name
+                | items { |id, dependency|
+                    {
+                        id: $id
+                        category: $category_name
+                        version: $dependency.version
+                        revision: $dependency.revision
+                    }
+                }
+        }
+        | flatten
+}
+
 export def "find dependency" [package: record<host: string, path: string, fragment: string>]: record -> any {
     let project = $in
     let id = $package | package to id
-    let dependencies = $project | child dependencies
+    let dependencies = $project
+        | find dependencies
+        | filter { $in.id == $id }
 
-    for category in ($dependencies | columns) {
-        let dependency = $dependencies | child $category | get --ignore-errors $id
-        if $dependency != null {
-            return {
-                id: $id
-                category: $category
-                version: $dependency.version
-                revision: $dependency.revision
-            }
-        }
+    if ($dependencies | is-empty) {
+        null
+    } else {
+        $dependencies | first
     }
-
-    null
 }
 
 export def "upsert dependency" [

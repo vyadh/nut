@@ -52,7 +52,6 @@ export def add-package [
 }
 
 export def remove-package [ package: string ] {
-
     let pkg = $package | package from id
 
     let project = project read

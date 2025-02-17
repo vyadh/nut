@@ -64,9 +64,45 @@ def "write project overwrites previous" [] {
 }
 
 # [test]
-def "find dependency when project file missing" [] {
-    cd $in.dir
+def "find dependencies when none" [] {
+    let result = { } | project find dependencies
 
+    assert equal $result []
+}
+
+# [test]
+def "find dependencies from multiple categories" [] {
+    let data = {
+        dependencies: {
+            runtime: {
+                "github.com/example/one": { version: "0.1.0", revision: "01" }
+            }
+            development: {
+                "github.com/example/two#component": { version: "0.2.0", revision: "02" }
+            }
+        }
+    }
+
+    let result = $data | project find dependencies
+
+    assert equal $result [
+        {
+            id: "github.com/example/one"
+            category: "runtime"
+            version: "0.1.0"
+            revision: "01"
+        }
+        {
+            id: "github.com/example/two#component"
+            category: "development"
+            version: "0.2.0"
+            revision: "02"
+        }
+    ]
+}
+
+# [test]
+def "find dependency when project file missing" [] {
     let result = { } | project find dependency ("github.com/example/project" | pkg)
 
     assert equal $result null
@@ -74,7 +110,6 @@ def "find dependency when project file missing" [] {
 
 # [test]
 def "find dependency when exists" [] {
-    cd $in.dir
     let data = {
         dependencies: {
             runtime: {
@@ -85,7 +120,6 @@ def "find dependency when exists" [] {
             }
         }
     }
-    $data | save "nut.nuon"
 
     assert equal ($data | project find dependency ("github.com/example/one" | pkg)) {
         id: "github.com/example/one"
@@ -104,7 +138,6 @@ def "find dependency when exists" [] {
 
 # [test]
 def "find dependency respects fragment" [] {
-    cd $in.dir
     let data = {
         dependencies: {
             runtime: {
@@ -113,7 +146,6 @@ def "find dependency respects fragment" [] {
             }
         }
     }
-    $data | save "nut.nuon"
 
     assert (($data | project find dependency ("github.com/example/first" | pkg)) == null)
     assert (($data | project find dependency ("github.com/example/first#component" | pkg)) != null)
