@@ -66,23 +66,31 @@ export def remove-package [ package: string ] {
     ignore
 }
 
-# Update package information being currently tracked. If no package is specified,
-# update information for all packages in the project.
+# Update packages in the project to the latest available.
+export def update-packages [] {
+    mut project = project read
+    let dependencies = $project | project dependencies
+    for package in $dependencies {
+        let pkg = $package.id | package from id
+        # todo move the project write to calling function so we only need to do once
+        # todo  that will also avoid any partial updates
+        $project = $project | upsert-package $package.id $pkg $package.category
+    }
+}
+
+# Update package information being currently tracked.
+# todo Option to update package(s) from the local clone, not the remote source?
 export def update-package [
     package: string # The package reference
     --version: string  # The version of the package to add, or latest if not specified
-    --offline        # Update package(s) from the local clone, not the remote source. todo
+    --offline        #
 ] {
-
-    # todo update all when package null
-
     let pkg = $package | package from id
     let project = project read
     let existing = $project | project find dependency $pkg
     if $existing == null {
         error make { msg: $"Package doesn't exist in project: ($package)" }
     }
-
     $project | upsert-package $package $pkg $existing.category --version $version
 }
 
@@ -91,7 +99,7 @@ def upsert-package [
     pkg: record<host: string, path: string, fragment: string>
     category: string
     --version: string
-]: record -> nothing {
+]: record -> record {
 
     let project = $in
 
@@ -128,8 +136,6 @@ def upsert-package [
         | project write
 
     # todo if project activated, print message that shell needs to be-reactivated
-
-    ignore
 }
 
 

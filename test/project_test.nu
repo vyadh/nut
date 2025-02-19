@@ -64,14 +64,14 @@ def "write project overwrites previous" [] {
 }
 
 # [test]
-def "find dependencies when none" [] {
-    let result = { } | project find dependencies
+def "dependencies when none" [] {
+    let result = { } | project dependencies
 
     assert equal $result []
 }
 
 # [test]
-def "find dependencies from multiple categories" [] {
+def "dependencies from multiple categories" [] {
     let data = {
         dependencies: {
             runtime: {
@@ -83,7 +83,7 @@ def "find dependencies from multiple categories" [] {
         }
     }
 
-    let result = $data | project find dependencies
+    let result = $data | project dependencies
 
     assert equal $result [
         {

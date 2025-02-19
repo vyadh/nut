@@ -17,9 +17,9 @@ export def write []: record -> record {
     $project
 }
 
-export def "find dependencies" []: record -> list<record<id: string, category: string, version: string, revision: string>> {
+export def dependencies []: record -> list<record<id: string, category: string, version: string, revision: string>> {
     let project = $in
-    let dependencies = $project | child dependencies
+    let dependencies = $project | child "dependencies"
 
     $dependencies
         | columns
@@ -42,7 +42,7 @@ export def "find dependency" [package: record<host: string, path: string, fragme
     let project = $in
     let id = $package | package to id
     let dependencies = $project
-        | find dependencies
+        | dependencies
         | filter { $in.id == $id }
 
     if ($dependencies | is-empty) {
